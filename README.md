@@ -19,6 +19,19 @@ Without a central registry, we'd need to:
 
 With this module, we only need to call a single `disconnect()` function and everything gets shut down gracefully.
 
+## Testing
+
+1. Start the server via `npm run dev`
+2. Start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `npx @modelcontextprotocol/inspector` and set the following options in the left pane:
+   - Transport Type: Streamable HTTP
+   - URL: http://localhost:3000/mcp
+   - Connection Type: Direct
+3. To test authentication, do _not_ click the Connect button. Instead,
+   - click Open Auth Settings button
+   - in the OAuth Authentication card, click Guided Token Refresh
+   - click through using the Continue button
+4. To test the MCP server, click the Connect button.
+
 ## History
 
 This code was initialized from [simpleStatelessStreamableHttp.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/2da89dbfc5f61d92bfc3ef6663d8886911bd4666/src/examples/server/simpleStatelessStreamableHttp.ts) example from the MCP TypeScript SDK.
