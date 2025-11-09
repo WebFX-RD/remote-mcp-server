@@ -233,11 +233,21 @@ export const setupGoogleAuthServer = ({
           throw new Error('Token was not issued to this client');
         }
 
+        // Calculate expiration timestamp
+        // Google returns expires_in (seconds until expiration) rather than exp (absolute timestamp)
+        // Note: Google returns exp as a string, so we need to convert to number
+        let expiresAt: number | undefined;
+        if (tokenInfo.exp) {
+          expiresAt = typeof tokenInfo.exp === 'string' ? parseInt(tokenInfo.exp, 10) : tokenInfo.exp;
+        } else if (tokenInfo.expires_in) {
+          expiresAt = Math.floor(Date.now() / 1000) + tokenInfo.expires_in;
+        }
+
         return {
           token,
           clientId: tokenInfo.aud,
           scopes: tokenInfo.scope ? tokenInfo.scope.split(' ') : [],
-          expiresAt: tokenInfo.exp,
+          expiresAt,
         };
       },
       getClient: async (clientId: string) => {
