@@ -1,13 +1,28 @@
 {
   "name": "mcp-server-remote",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Streamable HTTP MCP Server",
+  "type": "module",
+  "main": "dist/server/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx src/server/index.ts",
+    "build": "tsc",
+    "start": "node dist/server/index.js"
   },
-  "keywords": [],
+  "keywords": ["mcp", "server"],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.6",
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "tsx": "^4.19.2"
+  }
 }
