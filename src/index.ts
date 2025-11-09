@@ -2,9 +2,7 @@ import { promisify } from 'node:util';
 
 import cors from 'cors';
 import express, { Request, Response } from 'express';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { z } from 'zod';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import {
   getOAuthProtectedResourceMetadataUrl,
@@ -16,89 +14,11 @@ import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/p
 
 import { setupGoogleAuthServer } from './google-auth-provider.js';
 import { disconnect, registerCleanupFunction } from './disconnect.js';
+import { getMcpServer } from './get-mcp-server.js';
 
 const MCP_PORT = Number(process.env.MCP_PORT) || 3000;
 const AUTH_PORT = Number(process.env.MCP_AUTH_PORT) || 3001;
 const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true';
-
-function getMcpServer() {
-  const server = new McpServer({
-    name: 'stateless-streamable-http-server',
-    version: '1.0.0',
-  });
-
-  // Register a simple prompt
-  server.registerPrompt(
-    'greeting-template',
-    {
-      title: 'Greeting Template',
-      description: 'A simple greeting prompt template',
-      argsSchema: {
-        name: z.string().describe('Name to include in greeting'),
-      },
-    },
-    async ({ name }) => {
-      return {
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `Please greet ${name} in a friendly manner.`,
-            },
-          },
-        ],
-      };
-    }
-  );
-
-  // Register a simple tool
-  server.registerTool(
-    'add',
-    {
-      title: 'Add Two Numbers',
-      description: 'Adds two numbers together and returns the result',
-      inputSchema: {
-        a: z.number().describe('First number'),
-        b: z.number().describe('Second number'),
-      },
-    },
-    async ({ a, b }) => {
-      const result = a + b;
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `${a} + ${b} = ${result}`,
-          },
-        ],
-      };
-    }
-  );
-
-  // Create a simple resource at a fixed URI
-  server.registerResource(
-    'greeting-resource',
-    'https://example.com/greetings/default',
-    {
-      title: 'Greeting Resource',
-      description: 'A simple greeting resource',
-      mimeType: 'text/plain',
-    },
-    async () => {
-      return {
-        contents: [
-          {
-            uri: 'https://example.com/greetings/default',
-            text: 'Hello, world!',
-          },
-        ],
-      };
-    }
-  );
-
-  return server;
-}
 
 const app = express();
 app.use(express.json());
