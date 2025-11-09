@@ -14,7 +14,8 @@ import {
   OAuthServerProvider,
   AuthorizationParams,
 } from '@modelcontextprotocol/sdk/server/auth/provider.js';
-import { OAuth2Client } from 'google-auth-library';
+import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
+import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 
 // In-memory client store for DCR
 export class InMemoryClientsStore implements OAuthRegisteredClientsStore {
@@ -39,8 +40,6 @@ class GoogleOAuthProvider implements OAuthServerProvider {
   private readonly googleClientId: string;
   private readonly googleClientSecret: string;
   private readonly googleScopes: string[];
-  private readonly authorizationUrl: string;
-  private readonly tokenUrl: string;
   private readonly googleOauthClient: OAuth2Client;
 
   constructor(
@@ -53,8 +52,6 @@ class GoogleOAuthProvider implements OAuthServerProvider {
     this.googleClientId = googleClientId;
     this.googleClientSecret = googleClientSecret;
     this.googleScopes = googleScopes;
-    this.authorizationUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-    this.tokenUrl = 'https://oauth2.googleapis.com/token';
     this.googleOauthClient = new OAuth2Client({
       clientId: googleClientId,
       clientSecret: googleClientSecret,
@@ -70,20 +67,15 @@ class GoogleOAuthProvider implements OAuthServerProvider {
     params: AuthorizationParams,
     res: express.Response
   ): Promise<void> {
-    const targetUrl = new URL(this.authorizationUrl);
-    const searchParams = new URLSearchParams({
-      client_id: this.googleClientId,
-      response_type: 'code',
+    const authUrl = this.googleOauthClient.generateAuthUrl({
+      access_type: 'offline',
       redirect_uri: params.redirectUri,
       code_challenge: params.codeChallenge,
-      code_challenge_method: 'S256',
+      code_challenge_method: CodeChallengeMethod.S256,
       scope: this.googleScopes.join(' '),
+      ...(params.state && { state: params.state }),
     });
-    if (params.state) {
-      searchParams.set('state', params.state);
-    }
-    targetUrl.search = searchParams.toString();
-    res.redirect(targetUrl.toString());
+    res.redirect(authUrl);
   }
 
   async challengeForAuthorizationCode(
@@ -100,22 +92,13 @@ class GoogleOAuthProvider implements OAuthServerProvider {
     codeVerifier?: string,
     redirectUri?: string
   ): Promise<OAuthTokens> {
-    const params = new URLSearchParams({
-      grant_type: 'authorization_code',
+    const { tokens } = await this.googleOauthClient.getToken({
       code: authorizationCode,
-      ...(codeVerifier && { code_verifier: codeVerifier }),
+      ...(codeVerifier && { codeVerifier }),
       ...(redirectUri && { redirect_uri: redirectUri }),
     });
-    const response = await fetch(this.tokenUrl, {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: params.toString(),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
-    }
-    return (await response.json()) as OAuthTokens;
+    // Validate and narrows types
+    return OAuthTokensSchema.parse(tokens);
   }
 
   async exchangeRefreshToken(
@@ -123,30 +106,27 @@ class GoogleOAuthProvider implements OAuthServerProvider {
     refreshToken: string,
     scopes?: string[]
   ): Promise<OAuthTokens> {
+    // The refreshToken comes from the MCP client (e.g., Claude Desktop) that previously
+    // authenticated and is now refreshing their access token. We can't use googleOauthClient
+    // because it's a shared instance that doesn't track session-specific tokens, and doesn't offer
+    // a stateless API for refresh token exchange (unlike getToken() for authorization codes).
+    // Therefore, we call the token endpoint directly instead.
     const params = new URLSearchParams({
       grant_type: 'refresh_token',
       client_id: this.googleClientId,
       client_secret: this.googleClientSecret,
       refresh_token: refreshToken,
+      ...(scopes?.length && { scopes: scopes.join(' ') }),
     });
-
-    if (scopes?.length) {
-      params.set('scope', scopes.join(' '));
-    }
-
-    const response = await fetch(this.tokenUrl, {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: params.toString(),
     });
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Token refresh failed: ${response.status} - ${errorText}`);
     }
-
     return (await response.json()) as OAuthTokens;
   }
 
