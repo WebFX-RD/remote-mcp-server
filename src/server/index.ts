@@ -28,7 +28,7 @@ const getServer = () => {
       name: 'stateless-streamable-http-server',
       version: '1.0.0',
     },
-    { capabilities: { logging: {} } },
+    { capabilities: { logging: {} } }
   );
 
   // Register a simple prompt
@@ -50,7 +50,7 @@ const getServer = () => {
           },
         ],
       };
-    },
+    }
   );
 
   // Register a tool specifically for testing resumability
@@ -73,7 +73,7 @@ const getServer = () => {
               level: 'info',
               data: `Periodic notification #${counter} at ${new Date().toISOString()}`,
             },
-            extra.sessionId,
+            extra.sessionId
           );
         } catch (error) {
           console.error('Error sending notification:', error);
@@ -90,7 +90,7 @@ const getServer = () => {
           },
         ],
       };
-    },
+    }
   );
 
   // Create a simple resource at a fixed URI
@@ -107,7 +107,7 @@ const getServer = () => {
           },
         ],
       };
-    },
+    }
   );
   return server;
 };
@@ -123,7 +123,7 @@ app.use(
   cors({
     origin: '*', // Allow all origins - adjust as needed for production
     exposedHeaders: ['Mcp-Session-Id'],
-  }),
+  })
 );
 
 // Set up OAuth if enabled
@@ -161,7 +161,7 @@ if (useOAuth) {
         throw new Error(`Invalid or expired token: ${await response.text()}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { [key: string]: any };
 
       if (strictOAuth) {
         if (!data.aud) {
@@ -191,7 +191,7 @@ if (useOAuth) {
       resourceServerUrl: mcpServerUrl,
       scopesSupported: ['mcp:tools'],
       resourceName: 'MCP Demo Server',
-    }),
+    })
   );
 
   authMiddleware = requireBearerAuth({
@@ -255,7 +255,7 @@ const mcpGetHandler = async (req: Request, res: Response) => {
         message: 'Method not allowed.',
       },
       id: null,
-    }),
+    })
   );
 };
 
@@ -273,7 +273,7 @@ const mcpDeleteHandler = async (req: Request, res: Response) => {
         message: 'Method not allowed.',
       },
       id: null,
-    }),
+    })
   );
 };
 

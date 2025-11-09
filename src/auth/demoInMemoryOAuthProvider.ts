@@ -55,7 +55,7 @@ export class DemoInMemoryAuthProvider implements OAuthServerProvider {
   async authorize(
     client: OAuthClientInformationFull,
     params: AuthorizationParams,
-    res: Response,
+    res: Response
   ): Promise<void> {
     const code = randomUUID();
 
@@ -81,7 +81,7 @@ export class DemoInMemoryAuthProvider implements OAuthServerProvider {
 
   async challengeForAuthorizationCode(
     client: OAuthClientInformationFull,
-    authorizationCode: string,
+    authorizationCode: string
   ): Promise<string> {
     // Store the challenge with the code data
     const codeData = this.codes.get(authorizationCode);
@@ -97,7 +97,7 @@ export class DemoInMemoryAuthProvider implements OAuthServerProvider {
     authorizationCode: string,
     // Note: code verifier is checked in token.ts by default
     // it's unused here for that reason.
-    _codeVerifier?: string,
+    _codeVerifier?: string
   ): Promise<OAuthTokens> {
     const codeData = this.codes.get(authorizationCode);
     if (!codeData) {
@@ -106,7 +106,7 @@ export class DemoInMemoryAuthProvider implements OAuthServerProvider {
 
     if (codeData.client.client_id !== client.client_id) {
       throw new Error(
-        `Authorization code was not issued to this client, ${codeData.client.client_id} != ${client.client_id}`,
+        `Authorization code was not issued to this client, ${codeData.client.client_id} != ${client.client_id}`
       );
     }
 
@@ -140,7 +140,7 @@ export class DemoInMemoryAuthProvider implements OAuthServerProvider {
     _client: OAuthClientInformationFull,
     _refreshToken: string,
     _scopes?: string[],
-    _resource?: URL,
+    _resource?: URL
   ): Promise<OAuthTokens> {
     throw new Error('Not implemented for example demo');
   }
@@ -198,7 +198,7 @@ export const setupAuthServer = ({
       provider,
       issuerUrl: authServerUrl,
       scopesSupported: ['mcp:tools'],
-    }),
+    })
   );
 
   authApp.post('/introspect', async (req: Request, res: Response) => {
