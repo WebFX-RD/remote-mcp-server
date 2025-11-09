@@ -1,3 +1,5 @@
+import { promisify } from 'node:util';
+
 import cors from 'cors';
 import express, { Request, Response } from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -18,6 +20,7 @@ import type {
 } from '@modelcontextprotocol/sdk/types.js';
 
 import { setupGoogleAuthServer } from './google-auth-provider.js';
+import { disconnect, registerCleanupFunction } from './disconnect.js';
 
 const MCP_PORT = Number(process.env.MCP_PORT) || 3000;
 const AUTH_PORT = Number(process.env.MCP_AUTH_PORT) || 3001;
@@ -252,15 +255,9 @@ const mcpServer = app.listen(MCP_PORT, (error) => {
   }
   console.log(`MCP Streamable HTTP Server listening on port ${MCP_PORT}`);
 });
+registerCleanupFunction('MCP Server', promisify(mcpServer.close.bind(mcpServer)));
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, shutting down...');
-  mcpServer.close((error) => {
-    if (error) {
-      console.error(`Failed to shut down MCP server: ${error.message}`);
-      process.exit(1);
-    }
-    console.log('Gracefully shut down MCP server');
-    process.exit(0);
-  });
+process.on('SIGINT', () => {
+  console.log('SIGINT received, gracefully shutting down...');
+  disconnect().then(() => console.log('Graceful shutdown complete'));
 });

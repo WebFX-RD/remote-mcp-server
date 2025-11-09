@@ -16,6 +16,8 @@ import {
 } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
+import { registerCleanupFunction } from './disconnect.js';
+import { promisify } from 'node:util';
 
 // In-memory client store for DCR
 export class InMemoryClientsStore implements OAuthRegisteredClientsStore {
@@ -160,12 +162,12 @@ class GoogleOAuthProvider implements OAuthServerProvider {
  * MCP clients can dynamically register, but actual authentication goes through Google
  * using pre-registered credentials.
  */
-export const setupGoogleAuthServer = ({
+export function setupGoogleAuthServer({
   authServerUrl,
 }: {
   authServerUrl: URL;
   mcpServerUrl: URL;
-}): OAuthMetadata => {
+}): OAuthMetadata {
   const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     throw new Error(
@@ -220,11 +222,11 @@ export const setupGoogleAuthServer = ({
     }
   });
 
-  // Start the auth server
-  const authPort = authServerUrl.port;
-  authApp.listen(authPort, () => {
+  const { port: authPort } = authServerUrl;
+  const authServer = authApp.listen(authPort, () => {
     console.log(`Authorization Server listening on port ${authPort}`);
   });
+  registerCleanupFunction('Auth Server', promisify(authServer.close.bind(authServer)));
 
   const oauthMetadata: OAuthMetadata = createOAuthMetadata({
     provider,
@@ -235,4 +237,4 @@ export const setupGoogleAuthServer = ({
   oauthMetadata.introspection_endpoint = new URL('/introspect', authServerUrl).href;
 
   return oauthMetadata;
-};
+}
