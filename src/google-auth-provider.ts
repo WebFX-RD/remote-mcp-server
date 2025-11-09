@@ -42,6 +42,9 @@ class GoogleOAuthProvider implements OAuthServerProvider {
   private readonly googleScopes: string[];
   private readonly googleOauthClient: OAuth2Client;
 
+  // Google's OAuth server performs it
+  skipLocalPkceValidation = true;
+
   constructor(
     clientsStore: OAuthRegisteredClientsStore,
     googleClientId: string,
