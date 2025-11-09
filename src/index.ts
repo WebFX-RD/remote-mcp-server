@@ -16,7 +16,7 @@ import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middlew
 import { OAuthMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { checkResourceAllowed } from '@modelcontextprotocol/sdk/shared/auth-utils.js';
 
-import { setupAuthServer } from './demoInMemoryOAuthProvider.js';
+import { setupGoogleAuthServer } from './googleOAuthProvider.js';
 
 // Check for OAuth flag
 const useOAuth = process.argv.includes('--oauth');
@@ -134,10 +134,9 @@ if (useOAuth) {
   const mcpServerUrl = new URL(`http://localhost:${MCP_PORT}/mcp`);
   const authServerUrl = new URL(`http://localhost:${AUTH_PORT}`);
 
-  const oauthMetadata: OAuthMetadata = setupAuthServer({
+  const oauthMetadata: OAuthMetadata = setupGoogleAuthServer({
     authServerUrl,
     mcpServerUrl,
-    strictResource: strictOAuth,
   });
 
   const tokenVerifier = {
