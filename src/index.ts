@@ -14,13 +14,10 @@ import {
 } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import { OAuthMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
-import { checkResourceAllowed } from '@modelcontextprotocol/sdk/shared/auth-utils.js';
 
 import { setupGoogleAuthServer } from './google-auth-provider.js';
 
-// Check for OAuth flag
 const useOAuth = process.argv.includes('--oauth');
-const strictOAuth = process.argv.includes('--oauth-strict');
 
 const getServer = () => {
   // Create an MCP server with implementation details
@@ -158,17 +155,6 @@ if (useOAuth) {
       }
 
       const data = (await response.json()) as { [key: string]: any };
-
-      if (strictOAuth) {
-        if (!data.aud) {
-          throw new Error(`Resource Indicator (RFC8707) missing`);
-        }
-        if (
-          !checkResourceAllowed({ requestedResource: data.aud, configuredResource: mcpServerUrl })
-        ) {
-          throw new Error(`Expected resource indicator ${mcpServerUrl}, got: ${data.aud}`);
-        }
-      }
 
       return {
         token,
