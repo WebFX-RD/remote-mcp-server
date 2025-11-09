@@ -289,6 +289,7 @@ app.listen(MCP_PORT, error => {
         process.exit(1);
     }
     console.log(`MCP Stateless Streamable HTTP Server listening on port ${MCP_PORT}`);
+});
 
 // Handle server shutdown
 process.on('SIGINT', async () => {
