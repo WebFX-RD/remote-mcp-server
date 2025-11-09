@@ -6,18 +6,13 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
-import { OAuthMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import {
   getOAuthProtectedResourceMetadataUrl,
   mcpAuthMetadataRouter,
 } from '@modelcontextprotocol/sdk/server/auth/router.js';
 
+import type { OAuthMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/provider.js';
-import type {
-  CallToolResult,
-  GetPromptResult,
-  ReadResourceResult,
-} from '@modelcontextprotocol/sdk/types.js';
 
 import { setupGoogleAuthServer } from './google-auth-provider.js';
 import { disconnect, registerCleanupFunction } from './disconnect.js';
@@ -36,13 +31,16 @@ function getMcpServer() {
   );
 
   // Register a simple prompt
-  server.prompt(
+  server.registerPrompt(
     'greeting-template',
-    'A simple greeting prompt template',
     {
-      name: z.string().describe('Name to include in greeting'),
+      title: 'Greeting Template',
+      description: 'A simple greeting prompt template',
+      argsSchema: {
+        name: z.string().describe('Name to include in greeting'),
+      },
     },
-    async ({ name }): Promise<GetPromptResult> => {
+    async ({ name }) => {
       return {
         messages: [
           {
@@ -58,14 +56,20 @@ function getMcpServer() {
   );
 
   // Register a tool specifically for testing resumability
-  server.tool(
+  server.registerTool(
     'start-notification-stream',
-    'Starts sending periodic notifications for testing resumability',
     {
-      interval: z.number().describe('Interval in milliseconds between notifications').default(100),
-      count: z.number().describe('Number of notifications to send (0 for 100)').default(10),
+      title: 'Start Notification Stream',
+      description: 'Starts sending periodic notifications for testing resumability',
+      inputSchema: {
+        interval: z
+          .number()
+          .describe('Interval in milliseconds between notifications')
+          .default(100),
+        count: z.number().describe('Number of notifications to send (0 for 100)').default(10),
+      },
     },
-    async ({ interval, count }, extra): Promise<CallToolResult> => {
+    async ({ interval, count }, extra) => {
       const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
       let counter = 0;
 
@@ -98,11 +102,15 @@ function getMcpServer() {
   );
 
   // Create a simple resource at a fixed URI
-  server.resource(
+  server.registerResource(
     'greeting-resource',
     'https://example.com/greetings/default',
-    { mimeType: 'text/plain' },
-    async (): Promise<ReadResourceResult> => {
+    {
+      title: 'Greeting Resource',
+      description: 'A simple greeting resource',
+      mimeType: 'text/plain',
+    },
+    async () => {
       return {
         contents: [
           {
