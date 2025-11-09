@@ -22,7 +22,7 @@ The goal of this project is to create a Remote MCP Server that uses Google as th
 4. Follow the [testing section](#testing) below to test your MCP server.
 
 <details>
-<summary>(OPTIONAL) setup instructions for [Claude Code](https://code.claude.com/docs) users</summary>
+<summary>(OPTIONAL) <a href="https://code.claude.com/docs">Claude Code</a> setup</summary>
 
 1. The [block-env-files hook](.claude/hooks/block-env-files.sh) requires that you have [jq](https://jqlang.org/download/) installed on your system.
 
