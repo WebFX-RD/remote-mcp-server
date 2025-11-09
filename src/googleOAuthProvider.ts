@@ -42,15 +42,137 @@ export class InMemoryClientsStore implements OAuthRegisteredClientsStore {
  */
 class GoogleProxyOAuthServerProvider extends ProxyOAuthServerProvider {
   private _clientsStore: OAuthRegisteredClientsStore;
+  private googleClientId: string;
+  private googleClientSecret: string;
+  private googleScopes: string[];
 
-  constructor(options: ProxyOptions, clientsStore: OAuthRegisteredClientsStore) {
+  constructor(
+    options: ProxyOptions,
+    clientsStore: OAuthRegisteredClientsStore,
+    googleClientId: string,
+    googleClientSecret: string,
+    googleScopes: string[]
+  ) {
     super(options);
     this._clientsStore = clientsStore;
+    this.googleClientId = googleClientId;
+    this.googleClientSecret = googleClientSecret;
+    this.googleScopes = googleScopes;
   }
 
   // Override the clientsStore getter to use our local store
   override get clientsStore(): OAuthRegisteredClientsStore {
     return this._clientsStore;
+  }
+
+  // Override authorize to use Google client credentials instead of MCP client UUID
+  override async authorize(
+    client: OAuthClientInformationFull,
+    params: {
+      redirectUri: string;
+      codeChallenge: string;
+      state?: string;
+      scopes?: string[];
+      resource?: URL;
+    },
+    res: express.Response
+  ): Promise<void> {
+    const targetUrl = new URL(this._endpoints.authorizationUrl);
+    const searchParams = new URLSearchParams({
+      client_id: this.googleClientId, // Use actual Google client ID
+      response_type: 'code',
+      redirect_uri: params.redirectUri,
+      code_challenge: params.codeChallenge,
+      code_challenge_method: 'S256',
+      scope: this.googleScopes.join(' '), // Use Google scopes
+    });
+
+    if (params.state) {
+      searchParams.set('state', params.state);
+    }
+
+    // Don't include 'resource' parameter - Google doesn't support it
+
+    targetUrl.search = searchParams.toString();
+    res.redirect(targetUrl.toString());
+  }
+
+  // Override exchangeAuthorizationCode to use Google client credentials
+  override async exchangeAuthorizationCode(
+    client: OAuthClientInformationFull,
+    authorizationCode: string,
+    codeVerifier?: string,
+    redirectUri?: string,
+    resource?: URL
+  ): Promise<any> {
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: this.googleClientId, // Use actual Google client ID
+      client_secret: this.googleClientSecret, // Use actual Google client secret
+      code: authorizationCode,
+    });
+
+    if (codeVerifier) {
+      params.append('code_verifier', codeVerifier);
+    }
+
+    if (redirectUri) {
+      params.append('redirect_uri', redirectUri);
+    }
+
+    // Don't include 'resource' parameter - Google doesn't support it
+
+    const response = await fetch(this._endpoints.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  // Override exchangeRefreshToken to use Google client credentials
+  override async exchangeRefreshToken(
+    client: OAuthClientInformationFull,
+    refreshToken: string,
+    scopes?: string[],
+    resource?: URL
+  ): Promise<any> {
+    const params = new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: this.googleClientId, // Use actual Google client ID
+      client_secret: this.googleClientSecret, // Use actual Google client secret
+      refresh_token: refreshToken,
+    });
+
+    // Use Google scopes if provided, otherwise use default scopes
+    if (scopes?.length) {
+      params.set('scope', scopes.join(' '));
+    }
+
+    // Don't include 'resource' parameter - Google doesn't support it
+
+    const response = await fetch(this._endpoints.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token refresh failed: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
   }
 }
 
@@ -79,6 +201,12 @@ export const setupGoogleAuthServer = ({
 
   // Create local DCR client store
   const clientsStore = new InMemoryClientsStore();
+
+  // Define Google scopes
+  const googleScopes = [
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email',
+  ];
 
   // Create custom provider that handles registration locally but proxies auth to Google
   const provider = new GoogleProxyOAuthServerProvider(
@@ -116,7 +244,10 @@ export const setupGoogleAuthServer = ({
         return clientsStore.getClient(clientId);
       },
     },
-    clientsStore
+    clientsStore,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    googleScopes
   );
 
   // Create auth server Express app
@@ -129,10 +260,7 @@ export const setupGoogleAuthServer = ({
     mcpAuthRouter({
       provider,
       issuerUrl: authServerUrl,
-      scopesSupported: [
-        'https://www.googleapis.com/auth/userinfo.profile',
-        'https://www.googleapis.com/auth/userinfo.email',
-      ],
+      scopesSupported: googleScopes,
     })
   );
 
@@ -174,10 +302,7 @@ export const setupGoogleAuthServer = ({
   const oauthMetadata: OAuthMetadata = createOAuthMetadata({
     provider,
     issuerUrl: authServerUrl,
-    scopesSupported: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
-    ],
+    scopesSupported: googleScopes,
   });
 
   oauthMetadata.introspection_endpoint = new URL('/introspect', authServerUrl).href;
