@@ -224,7 +224,12 @@ export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
     scopesSupported: googleScopes,
   });
 
-  oauthMetadata.introspection_endpoint = new URL('/introspect', issuerUrl).href;
+  // Fix endpoint URLs to include the /auth prefix
+  // createOAuthMetadata generates URLs at the origin, but routes are mounted under /auth
+  oauthMetadata.authorization_endpoint = new URL('authorize', issuerUrl).href;
+  oauthMetadata.token_endpoint = new URL('token', issuerUrl).href;
+  oauthMetadata.registration_endpoint = new URL('register', issuerUrl).href;
+  oauthMetadata.introspection_endpoint = new URL('introspect', issuerUrl).href;
 
   return { router, metadata: oauthMetadata };
 }

@@ -30,18 +30,14 @@ if (!DISABLE_AUTH) {
   // Create auth middleware for MCP endpoints
   const baseUrl = new URL(`http://localhost:${PORT}`);
   const mcpServerUrl = new URL('/mcp', baseUrl);
-  const authIssuerUrl = new URL('/auth', baseUrl);
+  const authIssuerUrl = new URL('/auth/', baseUrl);
 
-  const { router: authRouter, metadata: oauthMetadata } = setupGoogleAuthServer({
-    issuerUrl: authIssuerUrl,
-  });
-
-  // Mount auth routes under /auth
-  app.use('/auth', authRouter);
+  const authServer = setupGoogleAuthServer({ issuerUrl: authIssuerUrl });
+  app.use('/auth', authServer.router);
 
   const tokenVerifier: OAuthTokenVerifier = {
     async verifyAccessToken(token) {
-      const endpoint = oauthMetadata.introspection_endpoint;
+      const endpoint = authServer.metadata.introspection_endpoint;
       if (!endpoint) {
         throw new Error('No token verification endpoint available in metadata');
       }
@@ -68,7 +64,7 @@ if (!DISABLE_AUTH) {
   // Add metadata routes to the main MCP server
   app.use(
     mcpAuthMetadataRouter({
-      oauthMetadata,
+      oauthMetadata: authServer.metadata,
       resourceServerUrl: mcpServerUrl,
     })
   );
@@ -157,7 +153,7 @@ const server = app.listen(PORT, (error) => {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
-  console.log(`MCP Server listening on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
 registerCleanupFunction('MCP Server', promisify(server.close.bind(server)));
 
