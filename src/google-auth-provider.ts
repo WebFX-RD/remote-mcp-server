@@ -203,14 +203,14 @@ export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
         return;
       }
 
-      const tokenInfo = await provider.verifyAccessToken(token);
+      const { clientId, scopes, expiresAt, ...rest } = await provider.verifyAccessToken(token);
       res.json({
+        ...rest,
         active: true,
-        client_id: tokenInfo.clientId,
-        scope: tokenInfo.scopes.join(' '),
-        exp: tokenInfo.expiresAt,
+        client_id: clientId,
+        scope: scopes.join(' '),
+        exp: expiresAt,
       });
-      return;
     } catch (error) {
       res.status(401).json({
         active: false,
