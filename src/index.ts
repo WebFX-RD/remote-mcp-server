@@ -17,6 +17,7 @@ import { getMcpServer } from './get-mcp-server.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true';
+const BASE_URL = new URL(process.env.BASE_URL as string);
 
 const app = express();
 app.use(express.json());
@@ -27,10 +28,8 @@ app.use(cors({ origin: '*', exposedHeaders: ['Mcp-Session-Id'] }));
 // Set up OAuth if enabled
 let authMiddleware = null;
 if (!DISABLE_AUTH) {
-  // Create auth middleware for MCP endpoints
-  const baseUrl = new URL(`http://localhost:${PORT}`);
-  const mcpServerUrl = new URL('/mcp', baseUrl);
-  const authIssuerUrl = new URL('/auth/', baseUrl);
+  const mcpServerUrl = new URL('/mcp', BASE_URL);
+  const authIssuerUrl = new URL('/auth/', BASE_URL);
 
   const authServer = setupGoogleAuthServer({ issuerUrl: authIssuerUrl });
   app.use('/auth', authServer.router);
