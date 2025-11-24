@@ -1,3 +1,4 @@
+import { log } from '@webfx-rd/cloud-utils/log';
 import { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
 import {
   OAuthClientInformationFull,
@@ -14,7 +15,6 @@ import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 
 import type { GenerateAuthUrlOpts } from 'google-auth-library';
-import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import type { AuthorizationParams } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
 // In-memory client store for DCR
@@ -136,6 +136,7 @@ class GoogleOAuthProvider implements OAuthServerProvider {
   async verifyAccessToken(token: string) {
     try {
       const tokenInfo = await this.googleOauthClient.getTokenInfo(token);
+      log.info('tokenInfo', tokenInfo);
       if (tokenInfo.aud !== this.googleClientId) {
         throw new Error('Token was not issued to this client');
       }
