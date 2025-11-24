@@ -21,6 +21,7 @@ const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true';
 const BASE_URL = new URL(process.env.BASE_URL as string);
 
 const app = express();
+app.set('trust proxy', true);
 app.use(express.json());
 
 // Support browser-based clients
