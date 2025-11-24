@@ -10,7 +10,7 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
    - http://localhost:6274/oauth/callback - Used by the MCP Inspector
    - https://developers.google.com/oauthplayground - Used by Google's [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) if you [use your own credentials](https://storage.googleapis.com/kamal-screenshots/ed8f07ba6269c7622202c599fce6807f.jpg).
 
-2. Once you have your Client ID and Client Secret, copy [src/.env.example](src/.env.example) to `src/.env.local` and replace the fake values.
+2. Once you have your Client ID and Client Secret, copy [.env.example](.env.example) to `.env.local` and replace the fake values.
 
 3. Run `npm install` followed by `npm run dev`. You should see the following output in your terminal:
 
