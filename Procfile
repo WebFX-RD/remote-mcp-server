@@ -1,1 +1,1 @@
-web: echo "VERSION 2" && ls -l
+web: node --env-file=/etc/secrets/.env.local .

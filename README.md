@@ -94,6 +94,10 @@ Without a central registry, we'd need to:
 
 With this module, we only need to call a single `disconnect()` function and everything gets shut down gracefully.
 
+## Deployment
+
+The [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/deploy#--set-secrets) option has a bug when mounting a secret as a file where it clears the directory. Therefore, mounting it to `/workspace/.env.local` does not work. To workaround this issue, we mount to `/etc/secrets` instead.
+
 ## History
 
 This code was initialized from [simpleStatelessStreamableHttp.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/2da89dbfc5f61d92bfc3ef6663d8886911bd4666/src/examples/server/simpleStatelessStreamableHttp.ts) example from the MCP TypeScript SDK.
