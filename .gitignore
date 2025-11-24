@@ -6,3 +6,4 @@ dist/
 .vscode
 *.tsbuildinfo
 package-lock.json
+source.tgz
