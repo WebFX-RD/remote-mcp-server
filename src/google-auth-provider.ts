@@ -133,7 +133,7 @@ class GoogleOAuthProvider implements OAuthServerProvider {
     return (await response.json()) as OAuthTokens;
   }
 
-  async verifyAccessToken(token: string): Promise<AuthInfo> {
+  async verifyAccessToken(token: string) {
     try {
       const tokenInfo = await this.googleOauthClient.getTokenInfo(token);
       if (tokenInfo.aud !== this.googleClientId) {
@@ -142,6 +142,7 @@ class GoogleOAuthProvider implements OAuthServerProvider {
       // Convert milliseconds to seconds
       const expiresAt = Math.floor(tokenInfo.expiry_date / 1000);
       return {
+        ...tokenInfo,
         token,
         clientId: tokenInfo.aud,
         scopes: tokenInfo.scopes || [],
