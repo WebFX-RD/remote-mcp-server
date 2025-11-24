@@ -1,1 +1,1 @@
-web: echo "hello world!"
+web: echo "VERSION 2" && ls -l
