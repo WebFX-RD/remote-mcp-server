@@ -53,6 +53,7 @@ if (!DISABLE_AUTH) {
 
       const data = (await response.json()) as { [key: string]: any };
       return {
+        ...data,
         token,
         clientId: data.client_id,
         scopes: data.scope ? data.scope.split(' ') : [],
