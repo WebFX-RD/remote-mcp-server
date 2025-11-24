@@ -1,1 +1,0 @@
-web: node --env-file=.env.local dist/index.js
