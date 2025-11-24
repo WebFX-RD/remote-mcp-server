@@ -1,0 +1,10 @@
+#!/bin/bash
+
+gcloud run deploy remote-mcp-server \
+--source=. \
+--region=us-central1 \
+--set-secrets=/workspace/.env.local=REMOTE_MCP_SERVER:latest \
+--no-cpu-throttling \
+--no-invoker-iam-check \
+--max-instances=1 \
+--timeout=3600
