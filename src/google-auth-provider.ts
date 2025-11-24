@@ -136,7 +136,6 @@ class GoogleOAuthProvider implements OAuthServerProvider {
   async verifyAccessToken(token: string) {
     try {
       const tokenInfo = await this.googleOauthClient.getTokenInfo(token);
-      log.info('tokenInfo', tokenInfo);
       if (tokenInfo.aud !== this.googleClientId) {
         throw new Error('Token was not issued to this client');
       }
