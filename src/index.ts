@@ -9,15 +9,13 @@ import {
   mcpAuthMetadataRouter,
 } from '@modelcontextprotocol/sdk/server/auth/router.js';
 
-import type { OAuthMetadata } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
 import { setupGoogleAuthServer } from './google-auth-provider.js';
 import { disconnect, registerCleanupFunction } from './disconnect.js';
 import { getMcpServer } from './get-mcp-server.js';
 
-const MCP_PORT = Number(process.env.MCP_PORT) || 3000;
-const AUTH_PORT = Number(process.env.MCP_AUTH_PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3000;
 const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true';
 
 const app = express();
@@ -30,10 +28,16 @@ app.use(cors({ origin: '*', exposedHeaders: ['Mcp-Session-Id'] }));
 let authMiddleware = null;
 if (!DISABLE_AUTH) {
   // Create auth middleware for MCP endpoints
-  const mcpServerUrl = new URL(`http://localhost:${MCP_PORT}/mcp`);
-  const authServerUrl = new URL(`http://localhost:${AUTH_PORT}`);
+  const baseUrl = new URL(`http://localhost:${PORT}`);
+  const mcpServerUrl = new URL('/mcp', baseUrl);
+  const authIssuerUrl = new URL('/auth', baseUrl);
 
-  const oauthMetadata: OAuthMetadata = setupGoogleAuthServer({ authServerUrl });
+  const { router: authRouter, metadata: oauthMetadata } = setupGoogleAuthServer({
+    issuerUrl: authIssuerUrl,
+  });
+
+  // Mount auth routes under /auth
+  app.use('/auth', authRouter);
 
   const tokenVerifier: OAuthTokenVerifier = {
     async verifyAccessToken(token) {
@@ -148,14 +152,14 @@ if (authMiddleware) {
   app.delete('/mcp', mcpDeleteHandler);
 }
 
-const mcpServer = app.listen(MCP_PORT, (error) => {
+const server = app.listen(PORT, (error) => {
   if (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
-  console.log(`MCP Streamable HTTP Server listening on port ${MCP_PORT}`);
+  console.log(`MCP Server listening on port ${PORT}`);
 });
-registerCleanupFunction('MCP Server', promisify(mcpServer.close.bind(mcpServer)));
+registerCleanupFunction('MCP Server', promisify(server.close.bind(server)));
 
 process.on('SIGINT', () => {
   console.log('SIGINT received, gracefully shutting down...');

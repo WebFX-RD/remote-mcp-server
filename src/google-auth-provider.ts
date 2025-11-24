@@ -1,12 +1,10 @@
-import { promisify } from 'node:util';
-
 import { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
 import {
   OAuthClientInformationFull,
   OAuthMetadata,
   OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, Router } from 'express';
 import {
   createOAuthMetadata,
   mcpAuthRouter,
@@ -18,8 +16,6 @@ import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { GenerateAuthUrlOpts } from 'google-auth-library';
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import type { AuthorizationParams } from '@modelcontextprotocol/sdk/server/auth/provider.js';
-
-import { registerCleanupFunction } from './disconnect.js';
 
 // In-memory client store for DCR
 export class InMemoryClientsStore implements OAuthRegisteredClientsStore {
@@ -164,7 +160,10 @@ class GoogleOAuthProvider implements OAuthServerProvider {
  * MCP clients can dynamically register, but actual authentication goes through Google
  * using pre-registered credentials.
  */
-export function setupGoogleAuthServer({ authServerUrl }: { authServerUrl: URL }): OAuthMetadata {
+export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
+  router: Router;
+  metadata: OAuthMetadata;
+} {
   const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     throw new Error(
@@ -186,15 +185,15 @@ export function setupGoogleAuthServer({ authServerUrl }: { authServerUrl: URL })
     googleScopes
   );
 
-  const authApp = express();
-  authApp.use(express.json());
-  authApp.use(express.urlencoded({ extended: true }));
+  const router = Router();
+  router.use(express.json());
+  router.use(express.urlencoded({ extended: true }));
 
-  // Add OAuth routes to the auth server
-  authApp.use(mcpAuthRouter({ provider, issuerUrl: authServerUrl, scopesSupported: googleScopes }));
+  // Add OAuth routes to the auth router
+  router.use(mcpAuthRouter({ provider, issuerUrl, scopesSupported: googleScopes }));
 
   // Add introspection endpoint for token verification
-  authApp.post('/introspect', async (req: Request, res: Response) => {
+  router.post('/introspect', async (req: Request, res: Response) => {
     try {
       const { token } = req.body;
       if (!token) {
@@ -219,19 +218,13 @@ export function setupGoogleAuthServer({ authServerUrl }: { authServerUrl: URL })
     }
   });
 
-  const { port: authPort } = authServerUrl;
-  const authServer = authApp.listen(authPort, () => {
-    console.log(`Authorization Server listening on port ${authPort}`);
-  });
-  registerCleanupFunction('Auth Server', promisify(authServer.close.bind(authServer)));
-
   const oauthMetadata: OAuthMetadata = createOAuthMetadata({
     provider,
-    issuerUrl: authServerUrl,
+    issuerUrl,
     scopesSupported: googleScopes,
   });
 
-  oauthMetadata.introspection_endpoint = new URL('/introspect', authServerUrl).href;
+  oauthMetadata.introspection_endpoint = new URL('/introspect', issuerUrl).href;
 
-  return oauthMetadata;
+  return { router, metadata: oauthMetadata };
 }
