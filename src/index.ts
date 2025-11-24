@@ -2,6 +2,7 @@ import { promisify } from 'node:util';
 
 import cors from 'cors';
 import express, { Request, Response } from 'express';
+import { log } from '@webfx-rd/cloud-utils/log';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import {
@@ -77,7 +78,7 @@ if (!DISABLE_AUTH) {
 // MCP POST endpoint with optional auth
 const mcpPostHandler = async (req: Request, res: Response) => {
   if (!DISABLE_AUTH && req.auth) {
-    console.log('Authenticated user:', req.auth);
+    log.info('Authenticated user:', req.auth);
   }
 
   const server = getMcpServer();
@@ -89,7 +90,7 @@ const mcpPostHandler = async (req: Request, res: Response) => {
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
     res.on('close', () => {
-      console.log('Request closed');
+      log.info('Request closed');
       transport.close();
       server.close();
     });
@@ -152,11 +153,11 @@ const server = app.listen(PORT, (error) => {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
-  console.log(`Server listening on port ${PORT}`);
+  log.info(`Server listening on port ${PORT}`);
 });
 registerCleanupFunction('MCP Server', promisify(server.close.bind(server)));
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, gracefully shutting down...');
-  disconnect().then(() => console.log('Graceful shutdown complete'));
+  log.info('SIGINT received, gracefully shutting down...');
+  disconnect().then(() => log.info('Graceful shutdown complete'));
 });
