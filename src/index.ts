@@ -21,10 +21,8 @@ const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true';
 const BASE_URL = new URL(process.env.BASE_URL as string);
 
 const app = express();
-app.set('trust proxy', true);
+app.set('trust proxy', 1); // trust the 1st proxy (cloud run LB)
 app.use(express.json());
-
-// Support browser-based clients
 app.use(cors({ origin: '*', exposedHeaders: ['Mcp-Session-Id'] }));
 
 // Set up OAuth if enabled
