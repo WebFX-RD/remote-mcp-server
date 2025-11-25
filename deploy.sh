@@ -8,4 +8,5 @@ gcloud run deploy remote-mcp-server \
 --no-invoker-iam-check \
 --max-instances=1 \
 --timeout=3600 \
---set-build-env-vars=NPM_TOKEN=${NPM_TOKEN}
+--set-build-env-vars=NPM_TOKEN=${NPM_TOKEN} \
+--set-cloudsql-instances=mcfx,mcfx-revops
