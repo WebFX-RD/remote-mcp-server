@@ -14,9 +14,14 @@ import {
 import { OAuthServerProvider } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
+import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
+import { getOAuthProtectedResourceMetadataUrl } from '@modelcontextprotocol/sdk/server/auth/router.js';
 
 import type { GenerateAuthUrlOpts } from 'google-auth-library';
-import type { AuthorizationParams } from '@modelcontextprotocol/sdk/server/auth/provider.js';
+import type {
+  AuthorizationParams,
+  OAuthTokenVerifier,
+} from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
 export class SpannerClientsStore implements OAuthRegisteredClientsStore {
   async getClient(clientId: string) {
@@ -243,4 +248,39 @@ export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
   oauthMetadata.introspection_endpoint = new URL('introspect', issuerUrl).href;
 
   return { router, metadata: oauthMetadata };
+}
+
+export function getAuthMiddleware({
+  mcpServerUrl,
+  introspectionUrl,
+}: {
+  mcpServerUrl: URL;
+  introspectionUrl: string | URL;
+}): ReturnType<typeof requireBearerAuth> {
+  const tokenVerifier: OAuthTokenVerifier = {
+    async verifyAccessToken(token) {
+      const response = await fetch(introspectionUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ token: token }).toString(),
+      });
+      if (!response.ok) {
+        throw new Error(`Invalid or expired token: ${await response.text()}`);
+      }
+
+      const data = (await response.json()) as { [key: string]: any };
+      return {
+        ...data,
+        token,
+        clientId: data.client_id,
+        scopes: data.scope ? data.scope.split(' ') : [],
+        expiresAt: data.exp,
+      };
+    },
+  };
+
+  return requireBearerAuth({
+    verifier: tokenVerifier,
+    resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl),
+  });
 }

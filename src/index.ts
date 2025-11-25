@@ -5,16 +5,10 @@ import express, { Request, Response } from 'express';
 import { log } from '@webfx-rd/cloud-utils/log';
 import { disconnect, registerCleanupFunction } from '@webfx-rd/cloud-utils/disconnect';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
-import {
-  getOAuthProtectedResourceMetadataUrl,
-  mcpAuthMetadataRouter,
-} from '@modelcontextprotocol/sdk/server/auth/router.js';
+import { mcpAuthMetadataRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 
-import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/provider.js';
-
-import { setupGoogleAuthServer } from './google-auth-provider.js';
-import { getMcpServer } from './get-mcp-server.js';
+import { setupGoogleAuthServer, getAuthMiddleware } from './auth.js';
+import { getMcpServer } from './mcp-server.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const BASE_URL = new URL(process.env.BASE_URL as string);
@@ -31,33 +25,6 @@ const authIssuerUrl = new URL('/auth/', BASE_URL);
 const authServer = setupGoogleAuthServer({ issuerUrl: authIssuerUrl });
 app.use('/auth', authServer.router);
 
-const tokenVerifier: OAuthTokenVerifier = {
-  async verifyAccessToken(token) {
-    const endpoint = authServer.metadata.introspection_endpoint;
-    if (!endpoint) {
-      throw new Error('No token verification endpoint available in metadata');
-    }
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ token: token }).toString(),
-    });
-    if (!response.ok) {
-      throw new Error(`Invalid or expired token: ${await response.text()}`);
-    }
-
-    const data = (await response.json()) as { [key: string]: any };
-    return {
-      ...data,
-      token,
-      clientId: data.client_id,
-      scopes: data.scope ? data.scope.split(' ') : [],
-      expiresAt: data.exp,
-    };
-  },
-};
-
 // Add metadata routes to the main MCP server
 app.use(
   mcpAuthMetadataRouter({
@@ -66,9 +33,9 @@ app.use(
   })
 );
 
-const authMiddleware = requireBearerAuth({
-  verifier: tokenVerifier,
-  resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl),
+const authMiddleware = getAuthMiddleware({
+  mcpServerUrl,
+  introspectionUrl: authServer.metadata.introspection_endpoint as string,
 });
 
 // MCP POST endpoint with optional auth

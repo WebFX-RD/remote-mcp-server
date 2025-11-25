@@ -74,9 +74,9 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
 
 ### Code Structure
 
-- [index.ts](src/index.ts) - Starts the MCP and Authorization servers
-- [google-auth-provider.ts](src/google-auth-provider.ts) - Handles authentication via Google OAuth
-- [get-mcp-server.ts](src/get-mcp-server.ts) - Defines the MCP tools, resources, etc.
+- [index.ts](src/index.ts) - Entrypoint that starts the server
+- [auth.ts](src/auth.ts) - Handles authentication via Google OAuth
+- [mcp-server.ts](src/mcp-server.ts) - Defines the MCP tools, resources, etc.
 
 ### Authorization Approach
 
