@@ -12,7 +12,7 @@ importers:
         specifier: ^1.0.6
         version: 1.22.0
       '@webfx-rd/cloud-utils':
-        specifier: ^3.0.840
+        specifier: ^3.0.0
         version: 3.0.840
       cors:
         specifier: ^2.8.5
@@ -3032,7 +3032,7 @@ snapshots:
       '@babel/helpers': 7.27.6
       '@babel/parser': 7.28.5
       '@babel/template': 7.27.2
-      '@babel/traverse': 7.27.7
+      '@babel/traverse': 7.28.5
       '@babel/types': 7.28.5
       convert-source-map: 2.0.0
       debug: 4.4.3
@@ -3239,7 +3239,7 @@ snapshots:
       '@feathersjs/authentication': 4.5.18
       '@feathersjs/commons': 4.5.16
       '@feathersjs/errors': 4.5.17
-      '@feathersjs/feathers': 4.5.15
+      '@feathersjs/feathers': 4.5.17
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
@@ -3339,7 +3339,7 @@ snapshots:
 
   '@google-cloud/monitoring@5.3.1':
     dependencies:
-      google-gax: 5.0.3
+      google-gax: 5.0.6
     transitivePeerDependencies:
       - supports-color
 
@@ -4281,7 +4281,7 @@ snapshots:
 
   '@types/pg-pool@2.0.6':
     dependencies:
-      '@types/pg': 8.15.5
+      '@types/pg': 8.15.6
 
   '@types/pg@8.15.5':
     dependencies:

@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import cors from 'cors';
 import express, { Request, Response } from 'express';
 import { log } from '@webfx-rd/cloud-utils/log';
+import { disconnect, registerCleanupFunction } from '@webfx-rd/cloud-utils/disconnect';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import {
@@ -13,7 +14,6 @@ import {
 import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
 import { setupGoogleAuthServer } from './google-auth-provider.js';
-import { disconnect, registerCleanupFunction } from './disconnect.js';
 import { getMcpServer } from './get-mcp-server.js';
 
 const PORT = Number(process.env.PORT) || 3000;
