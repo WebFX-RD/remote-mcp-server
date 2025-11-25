@@ -58,10 +58,11 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
 ## Testing
 
 1. Start the server via `pnpm run dev`
-2. Start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `pnpx @modelcontextprotocol/inspector` and set the following options in the left pane:
+2. Start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `pnpx inspect` and set the following options in the left pane:
    - Transport Type: Streamable HTTP
-   - URL: http://localhost:3030/mcp
-     - OR https://remote-mcp-server-979839513730.us-central1.run.app/mcp for production
+   - URL:
+     - Local: http://localhost:3030/mcp
+     - Production: https://remote-mcp-server-979839513730.us-central1.run.app/mcp
    - Connection Type: Direct
 3. To test authentication, do _not_ click the Connect button. Instead,
    - click Open Auth Settings button
@@ -75,29 +76,17 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
 
 - [index.ts](src/index.ts) - Starts the MCP and Authorization servers
 - [google-auth-provider.ts](src/google-auth-provider.ts) - Handles authentication via Google OAuth
-- [disconnect.ts](src/disconnect.ts) - Supports [graceful shutdown](#graceful-shutdown)
 - [get-mcp-server.ts](src/get-mcp-server.ts) - Defines the MCP tools, resources, etc.
 
 ### Authorization Approach
 
 Because Google doesn't support Dynamic Client Registration (DCR), we need to bridge the gap by presenting a DCR-compliant interface to MCP clients while using our pre-registered Google OAuth client credentials. This approach was inspired by [FastMCP's OAuthProxy](https://gofastmcp.com/servers/auth/authentication#oauthproxy).
 
-### Graceful Shutdown
-
-The [disconnect module](./src/disconnect.ts) acts as a central registry where other modules can register their cleanup methods. This is useful for modules that create stateful resources (e.g. database connections, HTTP servers) that need to be gracefully cleaned up before Node.js exits.
-
-Without a central registry, we'd need to:
-
-- Keep track of all stateful resources
-- Remember to call cleanup on each one
-- Handle errors from each cleanup separately
-- Call [process.exit](https://nodejs.org/api/process.html#processexitcode) which is not recommended
-
-With this module, we only need to call a single `disconnect()` function and everything gets shut down gracefully.
-
 ## Deployment
 
-The [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/deploy#--set-secrets) option has a bug when mounting a secret as a file where it clears the directory. Therefore, mounting it to `/workspace/.env.local` does not work. To workaround this issue, we mount to `/etc/secrets` instead.
+Run the [deploy.sh](./deploy.sh) script to deploy the Cloud Run Service.
+
+Note: the [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/deploy#--set-secrets) option has a bug when mounting a secret as a file where it clears the directory. Therefore, mounting it to `/workspace/.env.local` does not work. To workaround this issue, we mount to `/etc/secrets` instead.
 
 ## History
 
