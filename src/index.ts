@@ -58,7 +58,7 @@ const mcpPostHandler = async (req: Request, res: Response) => {
       server.close();
     });
   } catch (error) {
-    console.error('Failed to handle MCP request:', error);
+    log.error('Failed to handle MCP request:', error);
     if (!res.headersSent) {
       res.status(500).json({
         jsonrpc: '2.0',
@@ -88,7 +88,7 @@ app.delete('/mcp', authMiddleware, mcpNotAllowedHandler);
 
 const server = app.listen(PORT, (error) => {
   if (error) {
-    console.error('Failed to start server:', error);
+    log.error('Failed to start server:', error);
     process.exit(1);
   }
   log.info(`Server listening on port ${PORT}`);
