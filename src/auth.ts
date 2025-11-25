@@ -105,7 +105,7 @@ class GoogleOAuthProvider implements OAuthServerProvider {
   }
 
   async exchangeAuthorizationCode(
-    _client: OAuthClientInformationFull,
+    client: OAuthClientInformationFull,
     authorizationCode: string,
     codeVerifier?: string,
     redirectUri?: string
@@ -115,6 +115,46 @@ class GoogleOAuthProvider implements OAuthServerProvider {
       ...(codeVerifier && { codeVerifier }),
       ...(redirectUri && { redirect_uri: redirectUri }),
     });
+
+    if (tokens.access_token) {
+      const tokenInfo = await this.googleOauthClient.getTokenInfo(tokens.access_token);
+      const { sub: googleUserId, email } = tokenInfo;
+      if (googleUserId) {
+        const { client_id: oauthClientId } = client;
+
+        await spanner.transaction({
+          databasePath: 'devops.mcp',
+          run: async (transaction) => {
+            const [rows] = await spanner.query(
+              `
+              SELECT 1 
+              FROM oauthClientUsers 
+              WHERE
+                oauthClientId = @oauthClientId AND
+                googleUserId = @googleUserId
+              `,
+              { transaction, params: { oauthClientId, googleUserId } }
+            );
+            if (rows.length) {
+              return;
+            }
+            log.info(`New user authenticated: ${email}`, { oauthClientId, googleUserId });
+            spanner.insert(
+              'oauthClientUsers',
+              {
+                oauthClientId,
+                googleUserId,
+                email,
+                tokenInfo,
+                updatedAt: spanner.COMMIT_TIMESTAMP,
+              },
+              { transaction }
+            );
+          },
+        });
+      }
+    }
+
     // Validate and narrows types
     return OAuthTokensSchema.parse(tokens);
   }
