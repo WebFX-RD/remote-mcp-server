@@ -1,4 +1,5 @@
 import { log } from '@webfx-rd/cloud-utils/log';
+import { spanner } from '@webfx-rd/cloud-utils/spanner';
 import { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
 import {
   OAuthClientInformationFull,
@@ -17,16 +18,25 @@ import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 import type { GenerateAuthUrlOpts } from 'google-auth-library';
 import type { AuthorizationParams } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
-// In-memory client store for DCR
-export class InMemoryClientsStore implements OAuthRegisteredClientsStore {
-  private clients = new Map<string, OAuthClientInformationFull>();
-
+export class SpannerClientsStore implements OAuthRegisteredClientsStore {
   async getClient(clientId: string) {
-    return this.clients.get(clientId);
+    const [rows] = await spanner.query(
+      'SELECT data FROM oauthClients WHERE oauthClientId = @clientId',
+      {
+        databasePath: 'devops.mcp',
+        params: { clientId },
+      }
+    );
+    return (rows[0] as { data: OAuthClientInformationFull } | undefined)?.data;
   }
 
   async registerClient(clientMetadata: OAuthClientInformationFull) {
-    this.clients.set(clientMetadata.client_id, clientMetadata);
+    log.info('Registering OAuth client', clientMetadata);
+    await spanner.insert('devops.mcp.oauthClients', {
+      oauthClientId: clientMetadata.client_id,
+      data: clientMetadata,
+      updatedAt: spanner.COMMIT_TIMESTAMP,
+    });
     return clientMetadata;
   }
 }
@@ -172,7 +182,7 @@ export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
     );
   }
 
-  const clientsStore = new InMemoryClientsStore();
+  const clientsStore = new SpannerClientsStore();
 
   const googleScopes = [
     'https://www.googleapis.com/auth/userinfo.profile',

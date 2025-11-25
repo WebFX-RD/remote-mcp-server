@@ -58,9 +58,10 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
 ## Testing
 
 1. Start the server via `pnpm run dev`
-2. Start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `npx @modelcontextprotocol/inspector` and set the following options in the left pane:
+2. Start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `pnpx @modelcontextprotocol/inspector` and set the following options in the left pane:
    - Transport Type: Streamable HTTP
-   - URL: http://localhost:3000/mcp
+   - URL: http://localhost:3030/mcp
+     - OR https://remote-mcp-server-979839513730.us-central1.run.app/mcp for production
    - Connection Type: Direct
 3. To test authentication, do _not_ click the Connect button. Instead,
    - click Open Auth Settings button
