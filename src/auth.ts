@@ -23,6 +23,12 @@ import type {
   OAuthTokenVerifier,
 } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
+/**
+ * Force Google to show the consent screen even if the user has already granted access.
+ * Useful for demos.
+ */
+const FORCE_CONSENT = process.env.FORCE_CONSENT === 'true';
+
 export class SpannerClientsStore implements OAuthRegisteredClientsStore {
   async getClient(clientId: string) {
     const [rows] = await spanner.query(
@@ -92,6 +98,7 @@ class GoogleOAuthProvider implements OAuthServerProvider {
       code_challenge_method: CodeChallengeMethod.S256,
       scope: this.scope,
       ...(params.state && { state: params.state }),
+      ...(FORCE_CONSENT && { prompt: 'consent' }),
     });
     res.redirect(authUrl);
   }
