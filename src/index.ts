@@ -17,7 +17,6 @@ import { setupGoogleAuthServer } from './google-auth-provider.js';
 import { getMcpServer } from './get-mcp-server.js';
 
 const PORT = Number(process.env.PORT) || 3000;
-const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true';
 const BASE_URL = new URL(process.env.BASE_URL as string);
 
 const app = express();
@@ -25,59 +24,56 @@ app.set('trust proxy', 1); // trust the 1st proxy (cloud run LB)
 app.use(express.json());
 app.use(cors({ origin: '*', exposedHeaders: ['Mcp-Session-Id'] }));
 
-// Set up OAuth if enabled
-let authMiddleware = null;
-if (!DISABLE_AUTH) {
-  const mcpServerUrl = new URL('/mcp', BASE_URL);
-  const authIssuerUrl = new URL('/auth/', BASE_URL);
+// Set up OAuth
+const mcpServerUrl = new URL('/mcp', BASE_URL);
+const authIssuerUrl = new URL('/auth/', BASE_URL);
 
-  const authServer = setupGoogleAuthServer({ issuerUrl: authIssuerUrl });
-  app.use('/auth', authServer.router);
+const authServer = setupGoogleAuthServer({ issuerUrl: authIssuerUrl });
+app.use('/auth', authServer.router);
 
-  const tokenVerifier: OAuthTokenVerifier = {
-    async verifyAccessToken(token) {
-      const endpoint = authServer.metadata.introspection_endpoint;
-      if (!endpoint) {
-        throw new Error('No token verification endpoint available in metadata');
-      }
+const tokenVerifier: OAuthTokenVerifier = {
+  async verifyAccessToken(token) {
+    const endpoint = authServer.metadata.introspection_endpoint;
+    if (!endpoint) {
+      throw new Error('No token verification endpoint available in metadata');
+    }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ token: token }).toString(),
-      });
-      if (!response.ok) {
-        throw new Error(`Invalid or expired token: ${await response.text()}`);
-      }
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ token: token }).toString(),
+    });
+    if (!response.ok) {
+      throw new Error(`Invalid or expired token: ${await response.text()}`);
+    }
 
-      const data = (await response.json()) as { [key: string]: any };
-      return {
-        ...data,
-        token,
-        clientId: data.client_id,
-        scopes: data.scope ? data.scope.split(' ') : [],
-        expiresAt: data.exp,
-      };
-    },
-  };
+    const data = (await response.json()) as { [key: string]: any };
+    return {
+      ...data,
+      token,
+      clientId: data.client_id,
+      scopes: data.scope ? data.scope.split(' ') : [],
+      expiresAt: data.exp,
+    };
+  },
+};
 
-  // Add metadata routes to the main MCP server
-  app.use(
-    mcpAuthMetadataRouter({
-      oauthMetadata: authServer.metadata,
-      resourceServerUrl: mcpServerUrl,
-    })
-  );
+// Add metadata routes to the main MCP server
+app.use(
+  mcpAuthMetadataRouter({
+    oauthMetadata: authServer.metadata,
+    resourceServerUrl: mcpServerUrl,
+  })
+);
 
-  authMiddleware = requireBearerAuth({
-    verifier: tokenVerifier,
-    resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl),
-  });
-}
+const authMiddleware = requireBearerAuth({
+  verifier: tokenVerifier,
+  resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl),
+});
 
 // MCP POST endpoint with optional auth
 const mcpPostHandler = async (req: Request, res: Response) => {
-  if (!DISABLE_AUTH && req.auth) {
+  if (req.auth) {
     log.info('Authenticated user:', req.auth);
   }
 
@@ -106,47 +102,22 @@ const mcpPostHandler = async (req: Request, res: Response) => {
   }
 };
 
-if (authMiddleware) {
-  app.post('/mcp', authMiddleware, mcpPostHandler);
-} else {
-  app.post('/mcp', mcpPostHandler);
-}
+app.post('/mcp', authMiddleware, mcpPostHandler);
 
 // GET requests are not supported in stateless mode
-const mcpGetHandler = async (_req: Request, res: Response) => {
+const mcpNotAllowedHandler = async (_req: Request, res: Response) => {
   res.writeHead(405).end(
     JSON.stringify({
       jsonrpc: '2.0',
-      error: { code: -32000, message: 'Method not allowed.' },
+      error: { code: -32000, message: 'Method not allowed' },
       id: null,
     })
   );
 };
 
-// DELETE requests are not supported in stateless mode
-const mcpDeleteHandler = async (_req: Request, res: Response) => {
-  res.writeHead(405).end(
-    JSON.stringify({
-      jsonrpc: '2.0',
-      error: { code: -32000, message: 'Method not allowed.' },
-      id: null,
-    })
-  );
-};
-
-// Set up GET route with conditional auth middleware
-if (authMiddleware) {
-  app.get('/mcp', authMiddleware, mcpGetHandler);
-} else {
-  app.get('/mcp', mcpGetHandler);
-}
-
-// Set up DELETE route with conditional auth middleware
-if (authMiddleware) {
-  app.delete('/mcp', authMiddleware, mcpDeleteHandler);
-} else {
-  app.delete('/mcp', mcpDeleteHandler);
-}
+// GET & DELETE requests are not supported in stateless mode
+app.get('/mcp', authMiddleware, mcpNotAllowedHandler);
+app.delete('/mcp', authMiddleware, mcpNotAllowedHandler);
 
 const server = app.listen(PORT, (error) => {
   if (error) {
