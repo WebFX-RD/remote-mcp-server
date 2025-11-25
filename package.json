@@ -1,7 +1,7 @@
 {
-  "name": "mcp-server-remote",
+  "name": "remote-mcp-server",
   "version": "1.0.0",
-  "description": "Streamable HTTP MCP Server",
+  "description": "Remote MCP Server",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -9,12 +9,6 @@
     "build": "rm -rf dist && tsc --build",
     "start": "node --env-file=.env.local ."
   },
-  "keywords": [
-    "mcp",
-    "server"
-  ],
-  "author": "Kamal Muradov <muradovkamal10@gmail.com>",
-  "license": "ISC",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.6",
     "@webfx-rd/cloud-utils": "^3.0.0",
