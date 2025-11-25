@@ -1,1 +1,1 @@
-- Reference ../mcp-typescript-sdk to view source code and documentation of @modelcontextprotocol/sdk
+- Reference ~/lib_repos/typescript-sdk to view the source code and documentation for the `@modelcontextprotocol/sdk` package
