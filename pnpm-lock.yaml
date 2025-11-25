@@ -13,7 +13,7 @@ importers:
         version: 1.22.0
       '@webfx-rd/cloud-utils':
         specifier: ^3.0.0
-        version: 3.0.840
+        version: 3.0.841
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -40,7 +40,7 @@ importers:
         specifier: ^4.19.2
         version: 4.20.6
       typescript:
-        specifier: ^5.7.2
+        specifier: ^5.9.3
         version: 5.9.3
 
 packages:
@@ -401,12 +401,12 @@ packages:
     resolution: {integrity: sha512-YNSRBo85mgPQ9QuuzAHjmLwngIwmy2RjAUAoPl2mOL2+bCM0cAVZswPb8ylcsWJP7PgDJlck+ybv0MwJ9AM0sg==}
     engines: {node: '>=18'}
 
-  '@google-cloud/secret-manager@6.1.0':
-    resolution: {integrity: sha512-IrXjT1z2yW98htydkopcxdhNVh4rpAzO3oTVzKymfdnzmzCKWVxhfwYWWvIor1bzgQN4sa21Wv0CMDokJyTt7A==}
+  '@google-cloud/secret-manager@6.1.1':
+    resolution: {integrity: sha512-dwSuxJ9RNmAW46FjK1StiNIeOiSHHQs/XIy4VArJ6bBMR+WsIvR+zhPh2pa40aFa9uTty67j38Rl268TVV62EA==}
     engines: {node: '>=18'}
 
-  '@google-cloud/spanner@8.2.2':
-    resolution: {integrity: sha512-U/dbwqvRJBKW8Gc1XjI/aNsfP1s/UnOqzUfg+w0Q7e0BSIGWxAn0MugrfnolYlcWqvGQiCdvG22O3bdwSG7z6g==}
+  '@google-cloud/spanner@8.3.1':
+    resolution: {integrity: sha512-/njY6ik+JwRFoXBdQfz2hMROnnCFKsEXBKLykDz/Mrd6GROcCovJtEFCY7jlU8ZFiRsYSYshB45SyTIFE8LLTw==}
     engines: {node: '>=18'}
 
   '@google-cloud/storage@7.17.2':
@@ -1072,8 +1072,8 @@ packages:
   '@types/whatwg-url@8.2.2':
     resolution: {integrity: sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==}
 
-  '@webfx-rd/cloud-utils@3.0.840':
-    resolution: {integrity: sha512-ltvt09kHI6a6KL4cbjOrPoy4bBr1YfCnUQkFf6gjsWz6fN8HrmuimHvjrAofB3E/2rV2IlYy2Nw1HvdVnIFqGg==, tarball: https://npm.pkg.github.com/download/@webfx-rd/cloud-utils/3.0.840/162f835a7a7a61f7fa0e1dadda9a727b0faa20db}
+  '@webfx-rd/cloud-utils@3.0.841':
+    resolution: {integrity: sha512-jDuO+FgPQYpm5caYR0rJJ0OTZtE0DHxu9A1ARrantwds94Vrhj2GthytBEqXHxC3QEsAOtwEmzDnac/cjNarWw==, tarball: https://npm.pkg.github.com/download/@webfx-rd/cloud-utils/3.0.841/de9d9ef097f1e6f30d30aa884f1eae8cdbc50d53}
 
   '@webfx-rd/schema@3.0.44':
     resolution: {integrity: sha512-fwn0SiMs5c6XMhvdW22x++a4U/XEYQmbgZbFSCWDqUrvGKNTrUk1YWwq301DYEdcTmQxOu2ZEbVquwJ5TZTg8Q==, tarball: https://npm.pkg.github.com/download/@webfx-rd/schema/3.0.44/8843275d240a40dc2edcbe562758ea49f396760f}
@@ -1450,8 +1450,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  electron-to-chromium@1.5.259:
-    resolution: {integrity: sha512-I+oLXgpEJzD6Cwuwt1gYjxsDmu/S/Kd41mmLA3O+/uH2pFRO/DvOjUyGozL8j3KeLV6WyZ7ssPwELMsXCcsJAQ==}
+  electron-to-chromium@1.5.260:
+    resolution: {integrity: sha512-ov8rBoOBhVawpzdre+Cmz4FB+y66Eqrk6Gwqd8NGxuhv99GQ8XqMAr351KEkOt7gukXWDg6gJWEMKgL2RLMPtA==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -1738,8 +1738,8 @@ packages:
     resolution: {integrity: sha512-Jb6Z0+nvECVz+2lzSMt9u98UsoakXxA2HGHMCxh+so3n90XgYWkq5dur19JAJV7ONiJY22yBTyJB1TSkvPq9Ng==}
     engines: {node: '>=14'}
 
-  google-gax@5.0.3:
-    resolution: {integrity: sha512-DkWybwgkV8HA9aIizNEHEUHd8ho1BzGGQ/YMGDsTt167dQ8pk/oMiwxpUFvh6Ta93m8ZN7KwdWmP3o46HWjV+A==}
+  google-gax@5.0.4:
+    resolution: {integrity: sha512-HmQ6zIYBs2EikTk+kjeHmtHprNTEpsnVaKONw9cwZZwUNCkUb+D5RYrJpCxyjdvIDvJp3wLbVReolJLRZRms1g==}
     engines: {node: '>=18'}
 
   google-gax@5.0.6:
@@ -2234,8 +2234,8 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  mysql2@3.13.0:
-    resolution: {integrity: sha512-M6DIQjTqKeqXH5HLbLMxwcK5XfXHw30u5ap6EZmu7QVmcF/gnh2wS/EOiQ4MTbXz/vQeoXrmycPlVRM00WSslg==}
+  mysql2@3.15.3:
+    resolution: {integrity: sha512-FBrGau0IXmuqg4haEZRBfHNWB5mUARw6hNwPDXXGg0XzVJ50mr/9hb267lvpVMnhZ1FON3qNd4Xfcez1rbFwSg==}
     engines: {node: '>= 8.0'}
 
   naics@1.2.1:
@@ -3032,7 +3032,7 @@ snapshots:
       '@babel/helpers': 7.27.6
       '@babel/parser': 7.28.5
       '@babel/template': 7.27.2
-      '@babel/traverse': 7.28.5
+      '@babel/traverse': 7.27.7
       '@babel/types': 7.28.5
       convert-source-map: 2.0.0
       debug: 4.4.3
@@ -3339,7 +3339,7 @@ snapshots:
 
   '@google-cloud/monitoring@5.3.1':
     dependencies:
-      google-gax: 5.0.6
+      google-gax: 5.0.4
     transitivePeerDependencies:
       - supports-color
 
@@ -3393,13 +3393,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@google-cloud/secret-manager@6.1.0':
+  '@google-cloud/secret-manager@6.1.1':
     dependencies:
       google-gax: 5.0.6
     transitivePeerDependencies:
       - supports-color
 
-  '@google-cloud/spanner@8.2.2':
+  '@google-cloud/spanner@8.3.1':
     dependencies:
       '@babel/core': 7.27.7
       '@babel/helpers': 7.27.6
@@ -3426,7 +3426,7 @@ snapshots:
       events-intercept: 2.0.0
       extend: 3.0.2
       google-auth-library: 10.5.0
-      google-gax: 5.0.3
+      google-gax: 5.0.4
       grpc-gcp: 1.0.1
       lodash.snakecase: 4.1.1
       merge-stream: 2.0.0
@@ -4347,7 +4347,7 @@ snapshots:
       '@types/node': 22.19.1
       '@types/webidl-conversions': 7.0.3
 
-  '@webfx-rd/cloud-utils@3.0.840':
+  '@webfx-rd/cloud-utils@3.0.841':
     dependencies:
       '@aws-crypto/crc32c': 5.0.0
       '@elastic/elasticsearch': 8.15.0
@@ -4357,8 +4357,8 @@ snapshots:
       '@google-cloud/bigquery': 8.1.1
       '@google-cloud/kms': 5.2.0
       '@google-cloud/pubsub': 5.2.0
-      '@google-cloud/secret-manager': 6.1.0
-      '@google-cloud/spanner': 8.2.2
+      '@google-cloud/secret-manager': 6.1.1
+      '@google-cloud/spanner': 8.3.1
       '@google-cloud/storage': 7.17.2
       '@google-cloud/tasks': 6.2.0
       '@isaacs/ttlcache': 1.4.1
@@ -4384,7 +4384,7 @@ snapshots:
       luxon: 3.5.0
       maxmind: 4.3.8
       mongoose: 7.8.6
-      mysql2: 3.13.0
+      mysql2: 3.15.3
       naics: 1.2.1
       node-cache: 5.1.2
       object-hash: 3.0.0
@@ -4593,7 +4593,7 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.8.31
       caniuse-lite: 1.0.30001757
-      electron-to-chromium: 1.5.259
+      electron-to-chromium: 1.5.260
       node-releases: 2.0.27
       update-browserslist-db: 1.1.4(browserslist@4.28.0)
 
@@ -4786,7 +4786,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  electron-to-chromium@1.5.259: {}
+  electron-to-chromium@1.5.260: {}
 
   emoji-regex@8.0.0: {}
 
@@ -5258,11 +5258,10 @@ snapshots:
       - encoding
       - supports-color
 
-  google-gax@5.0.3:
+  google-gax@5.0.4:
     dependencies:
       '@grpc/grpc-js': 1.14.1
       '@grpc/proto-loader': 0.8.0
-      abort-controller: 3.0.0
       duplexify: 4.1.3
       google-auth-library: 10.5.0
       google-logging-utils: 1.1.3
@@ -5768,12 +5767,12 @@ snapshots:
 
   ms@2.1.3: {}
 
-  mysql2@3.13.0:
+  mysql2@3.15.3:
     dependencies:
       aws-ssl-profiles: 1.1.2
       denque: 2.1.0
       generate-function: 2.3.1
-      iconv-lite: 0.6.3
+      iconv-lite: 0.7.0
       long: 5.3.2
       lru.min: 1.1.3
       named-placeholders: 1.1.3

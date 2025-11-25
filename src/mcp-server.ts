@@ -1,78 +1,48 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { mysql } from '@webfx-rd/cloud-utils/mysql';
 
 export function getMcpServer() {
-  const server = new McpServer({
-    name: 'stateless-streamable-http-server',
-    version: '1.0.0',
-  });
+  const server = new McpServer({ name: 'rcfx-mcp', version: '1.0.0' });
 
-  // Register a simple prompt
-  server.registerPrompt(
-    'greeting-template',
-    {
-      title: 'Greeting Template',
-      description: 'A simple greeting prompt template',
-      argsSchema: {
-        name: z.string().describe('Name to include in greeting'),
-      },
-    },
-    async ({ name }) => {
-      return {
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `Please greet ${name} in a friendly manner.`,
-            },
-          },
-        ],
-      };
-    }
-  );
-
-  // Register a simple tool
   server.registerTool(
-    'add',
+    'mysql-execute',
     {
-      title: 'Add Two Numbers',
-      description: 'Adds two numbers together and returns the result',
+      description: 'Execute a sql statement in MySQL',
       inputSchema: {
-        a: z.number().describe('First number'),
-        b: z.number().describe('Second number'),
+        instance: z.enum(['monolith', 'revops'], {
+          description:
+            'Which database instance to query. Queries to the monolith instance should include the schema (e.g. core or identity) along with the table.',
+        }),
+        sql: z.string({
+          description:
+            'The sql to execute. Use ? as placeholders for values. Use ?? as a placeholder for identifiers.',
+        }),
+        params: z.optional(
+          z.array(
+            z.union([z.string(), z.number(), z.boolean(), z.null()], {
+              description: 'Replacements for the placeholders.',
+            })
+          )
+        ),
+      },
+      outputSchema: {
+        results: z.array(z.any()),
       },
     },
-    async ({ a, b }) => {
-      const result = a + b;
+    async ({ instance, sql, params }) => {
+      const results = await mysql.read(sql, {
+        instance: instance === 'monolith' ? 'mcfx' : 'mcfx-revops',
+        values: params,
+        castJson: true,
+        label: 'MCP',
+        user: 'rcfx-mcp',
+        selectTimeout: 60000,
+      });
       return {
-        content: [
-          {
-            type: 'text',
-            text: `${a} + ${b} = ${result}`,
-          },
-        ],
-      };
-    }
-  );
-
-  // Create a simple resource at a fixed URI
-  server.registerResource(
-    'greeting-resource',
-    'https://example.com/greetings/default',
-    {
-      title: 'Greeting Resource',
-      description: 'A simple greeting resource',
-      mimeType: 'text/plain',
-    },
-    async () => {
-      return {
-        contents: [
-          {
-            uri: 'https://example.com/greetings/default',
-            text: 'Hello, world!',
-          },
-        ],
+        structuredContent: { results },
+        // include a stringified version for backward compatibility
+        content: [{ type: 'text', text: JSON.stringify({ results }) }],
       };
     }
   );
