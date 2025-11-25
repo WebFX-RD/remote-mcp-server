@@ -126,6 +126,11 @@ class GoogleOAuthProvider implements OAuthServerProvider {
     if (tokens.access_token) {
       const tokenInfo = await this.googleOauthClient.getTokenInfo(tokens.access_token);
       const { sub: googleUserId, email } = tokenInfo;
+
+      if (!email?.endsWith('@webfx.com')) {
+        throw new Error('Access restricted to @webfx.com email addresses');
+      }
+
       if (googleUserId) {
         const { client_id: oauthClientId } = client;
 
@@ -200,6 +205,9 @@ class GoogleOAuthProvider implements OAuthServerProvider {
       const tokenInfo = await this.googleOauthClient.getTokenInfo(token);
       if (tokenInfo.aud !== this.googleClientId) {
         throw new Error('Token was not issued to this client');
+      }
+      if (!tokenInfo.email?.endsWith('@webfx.com')) {
+        throw new Error('Access restricted to @webfx.com email addresses');
       }
       // Convert milliseconds to seconds
       const expiresAt = Math.floor(tokenInfo.expiry_date / 1000);
