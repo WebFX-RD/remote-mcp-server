@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { mysql } from '@webfx-rd/cloud-utils/mysql';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
+/** Server-side query timeout */
+const TIMEOUT_MS = 30_000;
+
 export function register(server: McpServer) {
   server.registerTool(
     'mysql-execute',
@@ -35,7 +38,7 @@ export function register(server: McpServer) {
         castJson: true,
         user: 'rcfx-mcp',
         label: 'MCP:tool:mysql-execute',
-        selectTimeout: 60000,
+        selectTimeout: TIMEOUT_MS,
       });
       return {
         structuredContent: { results },

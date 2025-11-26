@@ -4,7 +4,7 @@ import { inspect } from 'node:util';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 /** Server-side query timeout */
-const TIMEOUT_MS = 60_000;
+const TIMEOUT_MS = 30_000;
 
 export function register(server: McpServer) {
   server.registerTool(
