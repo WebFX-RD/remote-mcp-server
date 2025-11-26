@@ -80,6 +80,7 @@ export function register(server: McpServer) {
       },
       outputSchema: {
         results: z.array(z.any()),
+        hint: z.optional(z.string()),
       },
     },
     async ({ collection, operation, query, options, preview, limit = 100 }) => {
@@ -168,9 +169,14 @@ export function register(server: McpServer) {
         ? results.map((result) => inspect(result, { depth: preview, colors: false, compact: true }))
         : results;
 
+      const hint =
+        results.length === 0
+          ? 'Fields are type-sensitive. A common mistake is passing association (site ID) as a number instead of a string.'
+          : undefined;
+
       return {
-        structuredContent: { results: finalResults },
-        content: [{ type: 'text', text: JSON.stringify({ results: finalResults }) }],
+        structuredContent: { results: finalResults, hint },
+        content: [{ type: 'text', text: JSON.stringify({ results: finalResults, hint }) }],
       };
     }
   );
