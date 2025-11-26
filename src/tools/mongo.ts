@@ -8,6 +8,34 @@ const TIMEOUT_MS = 30_000;
 
 export function register(server: McpServer) {
   server.registerTool(
+    'mongo-list-collections',
+    {
+      description: 'List all collections in the MongoDB database',
+      inputSchema: {},
+      outputSchema: {
+        collections: z.array(z.string()),
+      },
+    },
+    async () => {
+      try {
+        var connection = await mongo.connect();
+      } catch (error: any) {
+        error.message = `Failed to connect to MongoDB: ${error.message}`;
+        throw error;
+      }
+
+      const collections = await connection.db.listCollections().toArray();
+      const collectionNames = collections.map((col) => col.name);
+      await mongo.disconnect();
+
+      return {
+        structuredContent: { collections: collectionNames },
+        content: [{ type: 'text', text: JSON.stringify({ collections: collectionNames }) }],
+      };
+    }
+  );
+
+  server.registerTool(
     'mongo-execute',
     {
       description: 'Execute a query against a MongoDB collection',
