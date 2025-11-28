@@ -7,8 +7,10 @@ import { disconnect, registerCleanupFunction } from '@webfx-rd/cloud-utils/disco
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { mcpAuthMetadataRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 
-import { setupGoogleAuthServer, getAuthMiddleware } from './auth.js';
+import { setupGoogleAuthServer, getAuthMiddleware } from './auth/index.js';
+import { apiKeyAuthMiddleware } from './auth/api-key.js';
 import { getMcpServer } from './mcp-server.js';
+import './auth/types.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const BASE_URL = new URL(process.env.BASE_URL as string);
@@ -40,8 +42,8 @@ const authMiddleware = getAuthMiddleware({
 
 // MCP POST endpoint with optional auth
 const mcpPostHandler = async (req: Request, res: Response) => {
-  if (req.auth) {
-    log.info('Authenticated user:', req.auth);
+  if (req.user) {
+    log.info('Authenticated user:', req.user);
   }
 
   const server = getMcpServer();
@@ -69,6 +71,8 @@ const mcpPostHandler = async (req: Request, res: Response) => {
   }
 };
 
+// API key auth - if valid, handles request; otherwise falls through to OAuth
+app.post('/mcp', apiKeyAuthMiddleware, mcpPostHandler);
 app.post('/mcp', authMiddleware, mcpPostHandler);
 
 // GET requests are not supported in stateless mode

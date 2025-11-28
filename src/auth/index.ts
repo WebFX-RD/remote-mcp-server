@@ -6,7 +6,7 @@ import {
   OAuthMetadata,
   OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
-import express, { Request, Response, Router } from 'express';
+import express, { Request, Response, Router, NextFunction } from 'express';
 import {
   createOAuthMetadata,
   mcpAuthRouter,
@@ -22,6 +22,7 @@ import type {
   AuthorizationParams,
   OAuthTokenVerifier,
 } from '@modelcontextprotocol/sdk/server/auth/provider.js';
+import type { OAuthUser } from './types.js';
 
 /**
  * Force Google to show the consent screen even if the user has already granted access.
@@ -139,8 +140,8 @@ class GoogleOAuthProvider implements OAuthServerProvider {
           run: async (transaction) => {
             const [rows] = await spanner.query(
               `
-              SELECT 1 
-              FROM oauthClientUsers 
+              SELECT 1
+              FROM oauthClientUsers
               WHERE
                 oauthClientId = @oauthClientId AND
                 googleUserId = @googleUserId
@@ -311,7 +312,7 @@ export function getAuthMiddleware({
 }: {
   mcpServerUrl: URL;
   introspectionUrl: string | URL;
-}): ReturnType<typeof requireBearerAuth> {
+}): (req: Request, res: Response, next: NextFunction) => void {
   const tokenVerifier: OAuthTokenVerifier = {
     async verifyAccessToken(token) {
       const response = await fetch(introspectionUrl, {
@@ -323,19 +324,40 @@ export function getAuthMiddleware({
         throw new Error(`Invalid or expired token: ${await response.text()}`);
       }
 
-      const data = (await response.json()) as { [key: string]: any };
+      const data = (await response.json()) as { [key: string]: unknown };
       return {
         ...data,
         token,
-        clientId: data.client_id,
-        scopes: data.scope ? data.scope.split(' ') : [],
-        expiresAt: data.exp,
+        clientId: data.client_id as string,
+        scopes: data.scope ? (data.scope as string).split(' ') : [],
+        expiresAt: data.exp as number,
       };
     },
   };
 
-  return requireBearerAuth({
+  const bearerAuth = requireBearerAuth({
     verifier: tokenVerifier,
     resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl),
   });
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    bearerAuth(req, res, (err?: unknown) => {
+      if (err) {
+        next(err);
+        return;
+      }
+      if (req.auth) {
+        // sub and email come from Google's tokenInfo via the introspection endpoint
+        const authData = req.auth as unknown as { sub: string; email: string; scopes: string[] };
+        const user: OAuthUser = {
+          strategy: 'oauth',
+          email: authData.email,
+          googleUserId: authData.sub,
+          scopes: authData.scopes,
+        };
+        req.user = user;
+      }
+      next();
+    });
+  };
 }
