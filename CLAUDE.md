@@ -1,2 +1,3 @@
 - Reference `~/lib_repos/typescript-sdk` to view the source code and documentation for the `@modelcontextprotocol/sdk` package
 - Reference `README.md` for an explanation of the authentication approach
+- This project uses `pnpm`
