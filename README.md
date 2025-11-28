@@ -1,6 +1,6 @@
 # mcp-server-remote
 
-This repository contains the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview.
+This repository contains the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview. This code will eventually be moved to the [micro-services](https://github.com/WebFX-RD/micro-services) repository.
 
 ## Getting Started
 
@@ -19,7 +19,7 @@ This repository contains the RCFX Remote MCP Server. Watch this **[2 minute vide
 3. Follow instructions in the [Testing](#testing) section
 
 <details>
-<summary><a href="https://code.claude.com/docs">Claude Code</a> Setup</summary>
+<summary>Claude Code Setup</summary>
 
 1. The [block-env-files hook](.claude/hooks/block-env-files.sh) requires that you have [jq](https://jqlang.org/download/) installed on your system.
 
