@@ -75,11 +75,11 @@ This sections contains one-time setup instructions which were already completed 
 1. Start the server via `pnpm run dev`
 2. In another terminal, start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `pnpm run inspect`
 3. Set the following options in the left pane:
-   - Transport Type: Streamable HTTP
-   - URL:
+   - **Transport Type:** Streamable HTTP
+   - **URL:**
      - Local: http://localhost:3030/mcp
      - Production: https://remote-mcp-server-979839513730.us-central1.run.app/mcp
-   - Connection Type: Direct
+   - **Connection Type:** Direct
 4. We support two [authentication strategies](#authentication-strategies):
    - For **API Key** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2NV8yMzQ2NjY2NQ)
      - You can get your API Key from https://app.webfx.com/my-info/api-keys
