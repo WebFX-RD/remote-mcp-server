@@ -19,21 +19,17 @@ export async function apiKeyAuthMiddleware(
   next: NextFunction
 ): Promise<void> {
   const apiKey = req.headers['x-api-key'];
-
-  if (!apiKey || Array.isArray(apiKey)) {
+  if (!apiKey) {
     next('route'); // No API key, skip to OAuth route
     return;
   }
-
+  if (Array.isArray(apiKey)) {
+    res.status(400).json({ error: 'Expected x-api-key to be a string, received string[]' });
+    return;
+  }
   try {
     const { firstName, lastName, email, type } = await verifyApiKey(apiKey);
-    const user: ApiKeyUser = {
-      strategy: 'apikey',
-      firstName,
-      lastName,
-      email,
-      type,
-    };
+    const user: ApiKeyUser = { strategy: 'apikey', firstName, lastName, email, type };
     req.user = user;
     next(); // Valid API key, continue to handler
   } catch {
