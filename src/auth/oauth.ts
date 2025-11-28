@@ -8,7 +8,7 @@ import { OAuthServerProvider } from '@modelcontextprotocol/sdk/server/auth/provi
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 
-import type { Credentials, GenerateAuthUrlOpts } from 'google-auth-library';
+import type { GenerateAuthUrlOpts } from 'google-auth-library';
 import type { AuthorizationParams } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
 export const OAUTH_PATHS = [
