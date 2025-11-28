@@ -1,6 +1,6 @@
 # mcp-server-remote
 
-This repository contains the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview. This code will eventually be moved to the [micro-services](https://github.com/WebFX-RD/micro-services) repository.
+This repository contains the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview.
 
 ## Getting Started
 
@@ -112,6 +112,14 @@ Both strategies populate `req.user` with a discriminated union type (`strategy: 
 Run the [deploy.sh](./deploy.sh) script to deploy the Cloud Run Service.
 
 Note: the [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/deploy#--set-secrets) option has a bug when mounting a secret as a file where it clears the directory. Therefore, mounting it to `/workspace/.env.local` does not work. To workaround this issue, we mount to `/etc/secrets` instead.
+
+## Roadmap
+
+- Move this code to the [micro-services](https://github.com/WebFX-RD/micro-services) repository.
+
+- The MCP spec now supports Remote MCP Servers that don't support DCR. This is done by allowing the user to specify a custom client ID and client secret when configuring a server ([screenshot](https://webpagefx.mangoapps.com/msc/MjYxODQwN18yMzQ2Njc0MA)). To use this approach, we would need to create a way to securely share these credentials internally. This is an extra step that isn't necessary now, so it doesn't seem like it's worthwhile at this point. References:
+  - https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers#h_ed638d686b
+  - https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-registration-approaches
 
 ## History
 
