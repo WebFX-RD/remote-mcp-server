@@ -62,6 +62,9 @@ This sections contains one-time setup instructions which were already completed 
    - http://localhost:6274/oauth/callback/debug - Used by the MCP Inspector authorization flow described in the [testing section](#testing) below
    - http://localhost:6274/oauth/callback - Used by the MCP Inspector
    - https://developers.google.com/oauthplayground - Used by Google's [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) if you [use your own credentials](https://storage.googleapis.com/kamal-screenshots/ed8f07ba6269c7622202c599fce6807f.jpg).
+   - From https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers:
+     - https://claude.ai/api/mcp/auth_callback
+     - https://claude.com/api/mcp/auth_callback
 
 2. Once you have your Client ID and Client Secret, copy [.env.example](.env.example) to `.env.local` and replace the fake values.
 
