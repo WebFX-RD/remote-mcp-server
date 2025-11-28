@@ -1,4 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
+import { log } from '@webfx-rd/cloud-utils/log';
+import { axios, axiosRetry, axiosEnhanceError } from '@webfx-rd/cloud-utils/axios';
+
 import type { ApiKeyUser } from './types.js';
 
 interface ApiKeyUserResponse {
@@ -8,9 +11,21 @@ interface ApiKeyUserResponse {
   type: string;
 }
 
-async function verifyApiKey(_apiKey: string): Promise<ApiKeyUserResponse> {
-  // TODO: call POST authentication { strategy: 'apikey', apikey: _apiKey }
-  throw new Error('Not implemented');
+const client = axios.create({ baseURL: 'https://api.webfx.com' });
+axiosRetry(client);
+axiosEnhanceError(client);
+
+async function verifyApiKey(apiKey: string): Promise<ApiKeyUserResponse> {
+  const res = await client.post('iam/authentication', {
+    strategy: 'apikey',
+    apikey: apiKey,
+  });
+  return {
+    email: res.data.user.email,
+    firstName: res.data.user.firstName,
+    lastName: res.data.user.lastName,
+    type: res.data.user.type,
+  };
 }
 
 export async function apiKeyAuthMiddleware(
@@ -32,7 +47,8 @@ export async function apiKeyAuthMiddleware(
     const user: ApiKeyUser = { strategy: 'apikey', firstName, lastName, email, type };
     req.user = user;
     next(); // Valid API key, continue to handler
-  } catch {
+  } catch (error: any) {
+    log.error('Invalid API key:', error);
     res.status(401).json({ error: 'Invalid API key' });
   }
 }
