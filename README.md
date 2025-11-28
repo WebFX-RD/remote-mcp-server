@@ -65,7 +65,7 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
      - Local: http://localhost:3030/mcp
      - Production: https://remote-mcp-server-979839513730.us-central1.run.app/mcp
    - Connection Type: Direct
-4. We support two authentication strategies:
+4. We support two [authentication strategies](#authentication-strategies):
    - For **API Key** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2NV8yMzQ2NjY2NQ)
    - For **OAuth** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OF8yMzQ2NjY3MQ)
      - For the Guided OAuth Flow, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OV8yMzQ2NjY3Mg)
@@ -75,13 +75,22 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
 
 ### Code Structure
 
-- [index.ts](src/index.ts) - Entrypoint that starts the server
-- [auth.ts](src/auth.ts) - Handles authentication via Google OAuth
-- [mcp-server.ts](src/mcp-server.ts) - Defines the MCP tools, resources, etc.
+- [src/index.ts](src/index.ts) - Entrypoint that starts the server
+- [src/auth/](src/auth/) - Authentication module
+  - [index.ts](src/auth/index.ts) - Google OAuth provider and middleware
+  - [api-key.ts](src/auth/api-key.ts) - API key authentication middleware
+  - [types.ts](src/auth/types.ts) - Shared types including `AppUser` discriminated union
+- [src/mcp-server.ts](src/mcp-server.ts) - Defines the MCP tools, resources, etc.
 
-### Authorization Approach
+### Authentication Strategies
 
-Because Google doesn't support Dynamic Client Registration (DCR), we need to bridge the gap by presenting a DCR-compliant interface to MCP clients while using our pre-registered Google OAuth client credentials. This approach was inspired by [FastMCP's OAuthProxy](https://gofastmcp.com/servers/auth/authentication#oauthproxy).
+We support two authentication strategies:
+
+1. **API Key** - Clients send an `x-api-key` header. The key is verified against our authentication service and `req.user` is populated with user details.
+
+2. **OAuth** - Because Google doesn't support Dynamic Client Registration (DCR), we bridge the gap by presenting a DCR-compliant interface to MCP clients while using our pre-registered Google OAuth client credentials. This approach was inspired by [FastMCP's OAuthProxy](https://gofastmcp.com/servers/auth/authentication#oauthproxy).
+
+Both strategies populate `req.user` with a discriminated union type (`strategy: 'apikey' | 'oauth'`) for consistent downstream handling.
 
 ## Deployment
 
