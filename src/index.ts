@@ -21,11 +21,8 @@ const mcpServerUrl = new URL('/mcp', BASE_URL);
 app.use(auth.getRouter({ baseUrl: BASE_URL, mcpServerUrl }));
 app.use(auth.getMiddleware({ baseUrl: BASE_URL, mcpServerUrl }));
 
-const mcpPostHandler = async (req: Request, res: Response) => {
-  if (req.user) {
-    log.info('Authenticated user:', req.user);
-  }
-
+async function mcpPostHandler(req: Request, res: Response) {
+  log.info('Handling MCP request from user:', req.user);
   const server = getMcpServer();
   try {
     const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
@@ -35,7 +32,6 @@ const mcpPostHandler = async (req: Request, res: Response) => {
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
     res.on('close', () => {
-      log.info('Request closed');
       transport.close();
       server.close();
     });
@@ -49,7 +45,7 @@ const mcpPostHandler = async (req: Request, res: Response) => {
       });
     }
   }
-};
+}
 
 app.post('/mcp', mcpPostHandler);
 

@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 
 import type { OAuthTokenVerifier } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 
-import { getOAuthRouter, OAUTH_PATHS } from './oauth.js';
+import { getOAuthRouter as getRouter, OAUTH_PATHS } from './oauth.js';
 import { verifyApiKey } from './api-key.js';
 import type { OAuthUser, ApiKeyUser } from './types.js';
 
@@ -19,7 +19,7 @@ function getMiddleware({
   baseUrl: URL;
   mcpServerUrl: URL;
   publicPaths?: string[];
-}): (req: Request, res: Response, next: NextFunction) => void {
+}) {
   const introspectionUrl = new URL('/introspect', baseUrl);
   const tokenVerifier: OAuthTokenVerifier = {
     async verifyAccessToken(token) {
@@ -96,6 +96,6 @@ function getMiddleware({
 }
 
 export const auth = {
-  getRouter: getOAuthRouter,
+  getRouter,
   getMiddleware,
 };
