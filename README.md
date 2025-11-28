@@ -1,28 +1,25 @@
 # mcp-server-remote
 
-This repository is a demonstration of a Remote MCP Server that uses Google as the identity provider, written in TypeScript. Watch this **[2 minute video](https://storage.googleapis.com/kamal-screenshots/334c31902279f6a424f6811e76c07199.mp4)** for an overview.
+This repository contains the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview.
 
 ## Getting Started
 
-1. The first step is to acquire an OAuth Client ID and Client Secret by following [this guide](https://developers.google.com/identity/protocols/oauth2/web-server#creatingcred). The following Authorized redirect URIs are recommended:
+1. Initialize environment variables:
 
-   - http://localhost:6274/oauth/callback/debug - Used by the MCP Inspector authorization flow described in the [testing section](#testing) below
-   - http://localhost:6274/oauth/callback - Used by the MCP Inspector
-   - https://developers.google.com/oauthplayground - Used by Google's [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) if you [use your own credentials](https://storage.googleapis.com/kamal-screenshots/ed8f07ba6269c7622202c599fce6807f.jpg).
-
-2. Once you have your Client ID and Client Secret, copy [.env.example](.env.example) to `.env.local` and replace the fake values.
-
-3. Run `pnpm install` followed by `pnpm run dev`. You should see the following output in your terminal:
-
-   ```
-   Authorization Server listening on port 3001
-   MCP Streamable HTTP Server listening on port 3000
+   ```bash
+   gcloud secrets versions access latest --secret=REMOTE_MCP_SERVER_LOCAL --out-file=.env.local
    ```
 
-4. Follow the [testing section](#testing) below to test your MCP server.
+2. Install dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+3. Follow instructions in the [Testing](#testing) section
 
 <details>
-<summary>(OPTIONAL) <a href="https://code.claude.com/docs">Claude Code</a> setup</summary>
+<summary><a href="https://code.claude.com/docs">Claude Code</a> Setup</summary>
 
 1. The [block-env-files hook](.claude/hooks/block-env-files.sh) requires that you have [jq](https://jqlang.org/download/) installed on your system.
 
@@ -52,6 +49,21 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
      }
    }
    ```
+
+</details>
+
+<details>
+<summary>One-time OAuth Setup</summary>
+
+This sections contains one-time setup instructions which were already completed for WebFX.
+
+1. Acquire an OAuth Client ID and Client Secret by following [this guide](https://developers.google.com/identity/protocols/oauth2/web-server#creatingcred). The following Authorized redirect URIs are recommended:
+
+   - http://localhost:6274/oauth/callback/debug - Used by the MCP Inspector authorization flow described in the [testing section](#testing) below
+   - http://localhost:6274/oauth/callback - Used by the MCP Inspector
+   - https://developers.google.com/oauthplayground - Used by Google's [OAuth 2.0 Playground](https://developers.google.com/oauthplayground/) if you [use your own credentials](https://storage.googleapis.com/kamal-screenshots/ed8f07ba6269c7622202c599fce6807f.jpg).
+
+2. Once you have your Client ID and Client Secret, copy [.env.example](.env.example) to `.env.local` and replace the fake values.
 
 </details>
 
@@ -100,4 +112,6 @@ Note: the [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/depl
 
 ## History
 
-This code was initialized from [simpleStatelessStreamableHttp.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/2da89dbfc5f61d92bfc3ef6663d8886911bd4666/src/examples/server/simpleStatelessStreamableHttp.ts) example from the MCP TypeScript SDK.
+- This code was initialized from [simpleStatelessStreamableHttp.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/2da89dbfc5f61d92bfc3ef6663d8886911bd4666/src/examples/server/simpleStatelessStreamableHttp.ts) example from the MCP TypeScript SDK.
+
+- https://github.com/kym6464/mcp-server-remote was forked into the WebFX-RD GitHub organization
