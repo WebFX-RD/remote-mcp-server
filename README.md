@@ -76,7 +76,8 @@ This sections contains one-time setup instructions which were already completed 
 2. In another terminal, start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `pnpm run inspect`
 3. Set the following options in the left pane:
    - **Transport Type:** Streamable HTTP
-   - **URL:** http://localhost:3030/mcp
+   - **URL:**
+     - Local: http://localhost:3030/mcp
      - Production: https://remote-mcp-server-979839513730.us-central1.run.app/mcp
    - **Connection Type:** Direct
 4. We support two [authentication strategies](#authentication-strategies):
