@@ -6,10 +6,8 @@ import { log } from '@webfx-rd/cloud-utils/log';
 import { disconnect, registerCleanupFunction } from '@webfx-rd/cloud-utils/disconnect';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 
-import { setupGoogleAuthServer, getAuthMiddleware } from './auth/index.js';
-import { apiKeyAuthMiddleware } from './auth/api-key.js';
+import { auth } from './auth/index.js';
 import { getMcpServer } from './mcp-server.js';
-import './auth/types.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const BASE_URL = new URL(process.env.BASE_URL as string);
@@ -20,15 +18,9 @@ app.use(express.json());
 app.use(cors({ origin: '*', exposedHeaders: ['Mcp-Session-Id'] }));
 
 const mcpServerUrl = new URL('/mcp', BASE_URL);
-const authServer = setupGoogleAuthServer({ issuerUrl: BASE_URL, mcpServerUrl });
-app.use(authServer.router);
+app.use(auth.getRouter({ baseUrl: BASE_URL, mcpServerUrl }));
+app.use(auth.getMiddleware({ baseUrl: BASE_URL, mcpServerUrl }));
 
-const authMiddleware = getAuthMiddleware({
-  mcpServerUrl,
-  introspectionUrl: authServer.metadata.introspection_endpoint as string,
-});
-
-// MCP POST endpoint with optional auth
 const mcpPostHandler = async (req: Request, res: Response) => {
   if (req.user) {
     log.info('Authenticated user:', req.user);
@@ -59,24 +51,23 @@ const mcpPostHandler = async (req: Request, res: Response) => {
   }
 };
 
-// API key auth - if valid, handles request; otherwise falls through to OAuth
-app.post('/mcp', apiKeyAuthMiddleware, mcpPostHandler);
-app.post('/mcp', authMiddleware, mcpPostHandler);
+app.post('/mcp', mcpPostHandler);
 
-// GET requests are not supported in stateless mode
-const mcpNotAllowedHandler = async (_req: Request, res: Response) => {
-  res.writeHead(405).end(
-    JSON.stringify({
-      jsonrpc: '2.0',
-      error: { code: -32000, message: 'Method not allowed' },
-      id: null,
-    })
-  );
-};
+app.get('/mcp', (_req, res) => {
+  res.status(405).json({
+    jsonrpc: '2.0',
+    error: { code: -32000, message: 'Method not allowed' },
+    id: null,
+  });
+});
 
-// GET & DELETE requests are not supported in stateless mode
-app.get('/mcp', authMiddleware, mcpNotAllowedHandler);
-app.delete('/mcp', authMiddleware, mcpNotAllowedHandler);
+app.delete('/mcp', (_req, res) => {
+  res.status(405).json({
+    jsonrpc: '2.0',
+    error: { code: -32000, message: 'Method not allowed' },
+    id: null,
+  });
+});
 
 const server = app.listen(PORT, (error) => {
   if (error) {

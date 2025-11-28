@@ -1,28 +1,27 @@
 import { log } from '@webfx-rd/cloud-utils/log';
 import { spanner } from '@webfx-rd/cloud-utils/spanner';
 import { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
-import {
-  OAuthClientInformationFull,
-  OAuthMetadata,
-  OAuthTokens,
-} from '@modelcontextprotocol/sdk/shared/auth.js';
+import { OAuthClientInformationFull, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
 import express, { Request, Response, Router, NextFunction } from 'express';
 import {
-  createOAuthMetadata,
   mcpAuthRouter,
+  getOAuthProtectedResourceMetadataUrl,
 } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { OAuthServerProvider } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
-import { getOAuthProtectedResourceMetadataUrl } from '@modelcontextprotocol/sdk/server/auth/router.js';
 
 import type { GenerateAuthUrlOpts } from 'google-auth-library';
 import type {
   AuthorizationParams,
   OAuthTokenVerifier,
 } from '@modelcontextprotocol/sdk/server/auth/provider.js';
-import type { OAuthUser } from './types.js';
+
+import { verifyApiKey } from './api-key.js';
+import type { OAuthUser, ApiKeyUser } from './types.js';
+
+export type { AppUser, OAuthUser, ApiKeyUser } from './types.js';
 
 /**
  * Force Google to show the consent screen even if the user has already granted access.
@@ -225,23 +224,16 @@ class GoogleOAuthProvider implements OAuthServerProvider {
   }
 }
 
-/**
- * Google OAuth Provider for MCP
- *
- * This provider bridges the gap between MCP's DCR-compliant interface and Google OAuth.
- * MCP clients can dynamically register, but actual authentication goes through Google
- * using pre-registered credentials.
- */
-export function setupGoogleAuthServer({
-  issuerUrl,
-  mcpServerUrl,
-}: {
-  issuerUrl: URL;
-  mcpServerUrl: URL;
-}): {
-  router: Router;
-  metadata: OAuthMetadata;
-} {
+const OAUTH_PATHS = [
+  '/.well-known/oauth-authorization-server',
+  '/.well-known/oauth-protected-resource',
+  '/authorize',
+  '/token',
+  '/register',
+  '/introspect',
+];
+
+function getRouter({ baseUrl, mcpServerUrl }: { baseUrl: URL; mcpServerUrl: URL }): Router {
   const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     throw new Error(
@@ -270,13 +262,12 @@ export function setupGoogleAuthServer({
   router.use(
     mcpAuthRouter({
       provider,
-      issuerUrl,
+      issuerUrl: baseUrl,
       resourceServerUrl: mcpServerUrl,
       scopesSupported: googleScopes,
     })
   );
 
-  // Add introspection endpoint for token verification
   router.post('/introspect', async (req: Request, res: Response) => {
     try {
       const { token } = req.body;
@@ -302,31 +293,25 @@ export function setupGoogleAuthServer({
     }
   });
 
-  const oauthMetadata: OAuthMetadata = createOAuthMetadata({
-    provider,
-    issuerUrl,
-    scopesSupported: googleScopes,
-  });
-
-  // Add introspection endpoint (not included by createOAuthMetadata)
-  oauthMetadata.introspection_endpoint = new URL('introspect', issuerUrl).href;
-
-  return { router, metadata: oauthMetadata };
+  return router;
 }
 
-export function getAuthMiddleware({
+function getMiddleware({
+  baseUrl,
   mcpServerUrl,
-  introspectionUrl,
+  publicPaths = [],
 }: {
+  baseUrl: URL;
   mcpServerUrl: URL;
-  introspectionUrl: string | URL;
+  publicPaths?: string[];
 }): (req: Request, res: Response, next: NextFunction) => void {
+  const introspectionUrl = new URL('/introspect', baseUrl);
   const tokenVerifier: OAuthTokenVerifier = {
     async verifyAccessToken(token) {
       const response = await fetch(introspectionUrl, {
         method: 'POST',
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ token: token }).toString(),
+        body: new URLSearchParams({ token }).toString(),
       });
       if (!response.ok) {
         throw new Error(`Invalid or expired token: ${await response.text()}`);
@@ -348,14 +333,39 @@ export function getAuthMiddleware({
     resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpServerUrl),
   });
 
+  const skipPaths = new Set([...publicPaths, ...OAUTH_PATHS]);
   return (req: Request, res: Response, next: NextFunction) => {
+    if (skipPaths.has(req.path)) {
+      next();
+      return;
+    }
+
+    const apiKey = req.headers['x-api-key'];
+
+    if (apiKey) {
+      if (Array.isArray(apiKey)) {
+        res.status(400).json({ error: 'Expected x-api-key to be a string, received string[]' });
+        return;
+      }
+      verifyApiKey(apiKey)
+        .then(({ firstName, lastName, email, type }) => {
+          const user: ApiKeyUser = { strategy: 'apikey', firstName, lastName, email, type };
+          req.user = user;
+          next();
+        })
+        .catch((error) => {
+          log.error('Invalid API key:', error);
+          res.status(401).json({ error: 'Invalid API key' });
+        });
+      return;
+    }
+
     bearerAuth(req, res, (err?: unknown) => {
       if (err) {
         next(err);
         return;
       }
       if (req.auth) {
-        // sub and email come from Google's tokenInfo via the introspection endpoint
         const authData = req.auth as unknown as { sub: string; email: string; scopes: string[] };
         const user: OAuthUser = {
           strategy: 'oauth',
@@ -369,3 +379,5 @@ export function getAuthMiddleware({
     });
   };
 }
+
+export const auth = { getRouter, getMiddleware };
