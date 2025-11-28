@@ -82,6 +82,7 @@ This sections contains one-time setup instructions which were already completed 
    - Connection Type: Direct
 4. We support two [authentication strategies](#authentication-strategies):
    - For **API Key** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2NV8yMzQ2NjY2NQ)
+     - You can get your API Key from https://app.webfx.com/my-info/api-keys
    - For **OAuth** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OF8yMzQ2NjY3MQ)
      - For the Guided OAuth Flow, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OV8yMzQ2NjY3Mg)
 5. To test the MCP server, click the Connect button.
