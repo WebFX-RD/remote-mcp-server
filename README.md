@@ -101,7 +101,6 @@ This sections contains one-time setup instructions which were already completed 
 We support two authentication strategies:
 
 1. **API Key** - Clients send an `x-api-key` header. The key is verified against our authentication service and `req.user` is populated with user details.
-
 2. **OAuth** - Because Google doesn't support Dynamic Client Registration (DCR), we bridge the gap by presenting a DCR-compliant interface to MCP clients while using our pre-registered Google OAuth client credentials. This approach was inspired by [FastMCP's OAuthProxy](https://gofastmcp.com/servers/auth/authentication#oauthproxy).
 
 Both strategies populate `req.user` with a discriminated union type (`strategy: 'apikey' | 'oauth'`) for consistent downstream handling.
