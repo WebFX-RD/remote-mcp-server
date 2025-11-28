@@ -58,17 +58,18 @@ This repository is a demonstration of a Remote MCP Server that uses Google as th
 ## Testing
 
 1. Start the server via `pnpm run dev`
-2. Start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `pnpx inspect` and set the following options in the left pane:
+2. In another terminal, start the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) via `pnpm run inspect`
+3. Set the following options in the left pane:
    - Transport Type: Streamable HTTP
    - URL:
      - Local: http://localhost:3030/mcp
      - Production: https://remote-mcp-server-979839513730.us-central1.run.app/mcp
    - Connection Type: Direct
-3. To test authentication, do _not_ click the Connect button. Instead,
-   - click Open Auth Settings button
-   - in the OAuth Authentication card, click Guided Token Refresh
-   - click through using the Continue button
-4. To test the MCP server, click the Connect button.
+4. We support two authentication strategies:
+   - For **API Key** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2NV8yMzQ2NjY2NQ)
+   - For **OAuth** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OF8yMzQ2NjY3MQ)
+     - For the Guided OAuth Flow, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OV8yMzQ2NjY3Mg)
+5. To test the MCP server, click the Connect button.
 
 ## Development
 
