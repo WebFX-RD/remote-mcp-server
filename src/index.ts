@@ -5,7 +5,6 @@ import express, { Request, Response } from 'express';
 import { log } from '@webfx-rd/cloud-utils/log';
 import { disconnect, registerCleanupFunction } from '@webfx-rd/cloud-utils/disconnect';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { mcpAuthMetadataRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 
 import { setupGoogleAuthServer, getAuthMiddleware } from './auth/index.js';
 import { apiKeyAuthMiddleware } from './auth/api-key.js';
@@ -20,20 +19,9 @@ app.set('trust proxy', 1); // trust the 1st proxy (cloud run LB)
 app.use(express.json());
 app.use(cors({ origin: '*', exposedHeaders: ['Mcp-Session-Id'] }));
 
-// Set up OAuth
 const mcpServerUrl = new URL('/mcp', BASE_URL);
-const authIssuerUrl = new URL('/auth/', BASE_URL);
-
-const authServer = setupGoogleAuthServer({ issuerUrl: authIssuerUrl });
-app.use('/auth', authServer.router);
-
-// Add metadata routes to the main MCP server
-app.use(
-  mcpAuthMetadataRouter({
-    oauthMetadata: authServer.metadata,
-    resourceServerUrl: mcpServerUrl,
-  })
-);
+const authServer = setupGoogleAuthServer({ issuerUrl: BASE_URL, mcpServerUrl });
+app.use(authServer.router);
 
 const authMiddleware = getAuthMiddleware({
   mcpServerUrl,

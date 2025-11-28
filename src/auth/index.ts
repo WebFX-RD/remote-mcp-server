@@ -232,7 +232,13 @@ class GoogleOAuthProvider implements OAuthServerProvider {
  * MCP clients can dynamically register, but actual authentication goes through Google
  * using pre-registered credentials.
  */
-export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
+export function setupGoogleAuthServer({
+  issuerUrl,
+  mcpServerUrl,
+}: {
+  issuerUrl: URL;
+  mcpServerUrl: URL;
+}): {
   router: Router;
   metadata: OAuthMetadata;
 } {
@@ -261,8 +267,14 @@ export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
   router.use(express.json());
   router.use(express.urlencoded({ extended: true }));
 
-  // Add OAuth routes to the auth router
-  router.use(mcpAuthRouter({ provider, issuerUrl, scopesSupported: googleScopes }));
+  router.use(
+    mcpAuthRouter({
+      provider,
+      issuerUrl,
+      resourceServerUrl: mcpServerUrl,
+      scopesSupported: googleScopes,
+    })
+  );
 
   // Add introspection endpoint for token verification
   router.post('/introspect', async (req: Request, res: Response) => {
@@ -296,11 +308,7 @@ export function setupGoogleAuthServer({ issuerUrl }: { issuerUrl: URL }): {
     scopesSupported: googleScopes,
   });
 
-  // Fix endpoint URLs to include the /auth prefix
-  // createOAuthMetadata generates URLs at the origin, but routes are mounted under /auth
-  oauthMetadata.authorization_endpoint = new URL('authorize', issuerUrl).href;
-  oauthMetadata.token_endpoint = new URL('token', issuerUrl).href;
-  oauthMetadata.registration_endpoint = new URL('register', issuerUrl).href;
+  // Add introspection endpoint (not included by createOAuthMetadata)
   oauthMetadata.introspection_endpoint = new URL('introspect', issuerUrl).href;
 
   return { router, metadata: oauthMetadata };
