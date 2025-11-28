@@ -93,10 +93,8 @@ This sections contains one-time setup instructions which were already completed 
 
 - [src/index.ts](src/index.ts) - Entrypoint that starts the server
 - [src/auth/](src/auth/) - Authentication module
-  - [index.ts](src/auth/index.ts) - Google OAuth provider and middleware
-  - [api-key.ts](src/auth/api-key.ts) - API key authentication middleware
-  - [types.ts](src/auth/types.ts) - Shared types including `AppUser` discriminated union
-- [src/mcp-server.ts](src/mcp-server.ts) - Defines the MCP tools, resources, etc.
+- [src/mcp-server.ts](src/mcp-server.ts) - Registers MCP tools
+- [src/tools/](src/tools/) - MCP tool definitions
 
 ### Authentication Strategies
 
