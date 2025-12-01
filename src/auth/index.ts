@@ -23,23 +23,30 @@ function getMiddleware({
   const introspectionUrl = new URL('/introspect', baseUrl);
   const tokenVerifier: OAuthTokenVerifier = {
     async verifyAccessToken(token) {
-      const response = await fetch(introspectionUrl, {
-        method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ token }).toString(),
-      });
-      if (!response.ok) {
-        throw new Error(`Invalid or expired token: ${await response.text()}`);
-      }
+      try {
+        const response = await fetch(introspectionUrl, {
+          method: 'POST',
+          headers: { 'content-type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ token }).toString(),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          log.error('Token introspection failed:', { status: response.status, body: errorText });
+          throw new Error(`Invalid or expired token: ${errorText}`);
+        }
 
-      const data = (await response.json()) as { [key: string]: unknown };
-      return {
-        ...data,
-        token,
-        clientId: data.client_id as string,
-        scopes: data.scope ? (data.scope as string).split(' ') : [],
-        expiresAt: data.exp as number,
-      };
+        const data = (await response.json()) as { [key: string]: unknown };
+        return {
+          ...data,
+          token,
+          clientId: data.client_id as string,
+          scopes: data.scope ? (data.scope as string).split(' ') : [],
+          expiresAt: data.exp as number,
+        };
+      } catch (error) {
+        log.error('Token verification error:', error);
+        throw error;
+      }
     },
   };
 
@@ -77,6 +84,7 @@ function getMiddleware({
 
     bearerAuth(req, res, (err?: unknown) => {
       if (err) {
+        log.error('Bearer auth error:', err);
         next(err);
         return;
       }

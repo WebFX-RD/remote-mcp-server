@@ -258,6 +258,7 @@ class GoogleOAuthProvider implements OAuthServerProvider {
         expiresAt,
       };
     } catch (error) {
+      log.error('verifyAccessToken failed:', error);
       throw new Error(`Invalid or expired token: ${error}`);
     }
   }
@@ -277,12 +278,17 @@ export class SpannerClientsStore implements OAuthRegisteredClientsStore {
 
   async registerClient(clientMetadata: OAuthClientInformationFull) {
     log.info('Registering OAuth client', clientMetadata);
-    await spanner.insert('devops.mcp.oauthClients', {
-      oauthClientId: clientMetadata.client_id,
-      data: clientMetadata,
-      updatedAt: spanner.COMMIT_TIMESTAMP,
-    });
-    return clientMetadata;
+    try {
+      await spanner.insert('devops.mcp.oauthClients', {
+        oauthClientId: clientMetadata.client_id,
+        data: clientMetadata,
+        updatedAt: spanner.COMMIT_TIMESTAMP,
+      });
+      return clientMetadata;
+    } catch (error) {
+      log.error('Failed to register OAuth client:', error);
+      throw error;
+    }
   }
 }
 
