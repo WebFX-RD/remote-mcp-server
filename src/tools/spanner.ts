@@ -24,6 +24,7 @@ export function register(server: McpServer) {
       const [results] = await spanner.query(sql, {
         databasePath,
         params,
+        timeout: 30000,
       });
       return {
         structuredContent: { results },
