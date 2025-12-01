@@ -50,10 +50,11 @@ export function register(server: McpServer) {
   server.registerTool(
     'mysql-ddl',
     {
-      description: 'Get the DDL (CREATE TABLE statement) for a MySQL table',
+      description: 'Get the DDL (CREATE TABLE statement) for one or more MySQL tables',
       inputSchema: {
-        tablePath: z.string({
-          description: 'Table path in format database.table (e.g., core.sites, identity.audiences)',
+        tablePath: z.union([z.string(), z.array(z.string())], {
+          description:
+            'Table path(s) in database.table format (e.g., core.sites, identity.audiences)',
         }),
       },
       outputSchema: {
@@ -61,27 +62,45 @@ export function register(server: McpServer) {
       },
     },
     async ({ tablePath }) => {
-      const instance = tablePath.startsWith('revops') ? 'mcfx-revops' : 'mcfx';
+      const tablePaths = Array.isArray(tablePath) ? tablePath : [tablePath];
 
-      try {
-        const result = await mysql.readOne('SHOW CREATE TABLE ??', {
-          values: [tablePath],
-          instance,
-          user: 'rcfx-mcp',
-          label: 'MCP:tool:mysql-execute',
-        });
+      const results = await Promise.allSettled(
+        tablePaths.map(async (path) => {
+          const instance = path.startsWith('revops') ? 'mcfx-revops' : 'mcfx';
 
-        const ddl = result?.['Create Table'] as string;
-        const formattedDdl = `-- ${tablePath} definition\n${ddl}`;
+          const result = await mysql.readOne('SHOW CREATE TABLE ??', {
+            values: [path],
+            instance,
+            user: 'rcfx-mcp',
+            label: 'MCP:tool:mysql-execute',
+          });
 
-        const structuredContent = { ddl: formattedDdl };
-        return {
-          structuredContent,
-          content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
-        };
-      } catch (error: any) {
-        throw new Error(`Failed to get DDL for ${tablePath}: ${error.message}`);
+          const ddl = result?.['Create Table'] as string;
+          return `-- ${path} definition\n${ddl}`;
+        })
+      );
+
+      const successful: string[] = [];
+      const failed: string[] = [];
+      for (const [i, res] of results.entries()) {
+        if (res.status === 'fulfilled') {
+          successful.push(res.value);
+        } else {
+          failed.push(tablePaths[i]);
+        }
       }
+
+      const formattedDdl = successful.join('\n\n');
+      const structuredContent = { ddl: formattedDdl };
+
+      if (failed.length) {
+        throw new Error(`${formattedDdl}\n\nFailed tables: ${failed.join(', ')}`);
+      }
+
+      return {
+        structuredContent,
+        content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+      };
     }
   );
 }
