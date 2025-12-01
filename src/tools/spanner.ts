@@ -6,10 +6,10 @@ export function register(server: McpServer) {
   server.registerTool(
     'spanner-execute',
     {
-      description: 'Execute a SQL query in Spanner',
+      description: 'Execute a SQL statement in Spanner',
       inputSchema: {
         databasePath: z.string({
-          description: 'Database path in format project.database (e.g., marketingcloudfx.mcfx)',
+          description: 'Database path in instance.database format (e.g., marketingcloudfx.mcfx)',
         }),
         sql: z.string({
           description: 'The SQL to execute. Use @paramName as placeholders for values.',
@@ -75,6 +75,27 @@ export function register(server: McpServer) {
       return {
         structuredContent,
         content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'spanner-topology',
+    {
+      description:
+        'Get the topology of all Spanner databases and tables organized by instance, database, and table',
+      inputSchema: {},
+      outputSchema: {
+        topology: z.record(z.record(z.array(z.string())), {
+          description: `{ instance: { database: table[] } }`,
+        }),
+      },
+    },
+    async () => {
+      const topology = await spanner.getTopology();
+      return {
+        structuredContent: { topology },
+        content: [{ type: 'text', text: JSON.stringify({ topology }) }],
       };
     }
   );
