@@ -13,7 +13,7 @@ importers:
         version: 1.22.0
       '@webfx-rd/cloud-utils':
         specifier: ^3.0.0
-        version: 3.0.841
+        version: 3.0.845
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -1072,8 +1072,8 @@ packages:
   '@types/whatwg-url@8.2.2':
     resolution: {integrity: sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==}
 
-  '@webfx-rd/cloud-utils@3.0.841':
-    resolution: {integrity: sha512-jDuO+FgPQYpm5caYR0rJJ0OTZtE0DHxu9A1ARrantwds94Vrhj2GthytBEqXHxC3QEsAOtwEmzDnac/cjNarWw==, tarball: https://npm.pkg.github.com/download/@webfx-rd/cloud-utils/3.0.841/de9d9ef097f1e6f30d30aa884f1eae8cdbc50d53}
+  '@webfx-rd/cloud-utils@3.0.845':
+    resolution: {integrity: sha512-nB7uoWQq1/IbCypuDIGhPpz+eGJTF6wRi/9nv1SEf8JDTwuPkO21bSdWye2xTBrzw4IK0Aomo/dOVq+MVl05og==, tarball: https://npm.pkg.github.com/download/@webfx-rd/cloud-utils/3.0.845/86b363374cc6c1e5d25636947ffba59b4f218d12}
 
   '@webfx-rd/schema@3.0.44':
     resolution: {integrity: sha512-fwn0SiMs5c6XMhvdW22x++a4U/XEYQmbgZbFSCWDqUrvGKNTrUk1YWwq301DYEdcTmQxOu2ZEbVquwJ5TZTg8Q==, tarball: https://npm.pkg.github.com/download/@webfx-rd/schema/3.0.44/8843275d240a40dc2edcbe562758ea49f396760f}
@@ -4347,7 +4347,7 @@ snapshots:
       '@types/node': 22.19.1
       '@types/webidl-conversions': 7.0.3
 
-  '@webfx-rd/cloud-utils@3.0.841':
+  '@webfx-rd/cloud-utils@3.0.845':
     dependencies:
       '@aws-crypto/crc32c': 5.0.0
       '@elastic/elasticsearch': 8.15.0

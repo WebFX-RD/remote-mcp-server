@@ -9,31 +9,24 @@ export function register(server: McpServer) {
   server.registerTool(
     'mysql-execute',
     {
-      description: 'Execute a sql statement in MySQL',
+      description: 'Execute a SQL statement in MySQL',
       inputSchema: {
-        instance: z.enum(['monolith', 'revops'], {
-          description:
-            'Which database instance to query. Queries to the monolith instance should include the schema (e.g. core or identity) along with the table.',
+        database: z.string({
+          description: 'Database name (e.g., core, identity, revops)',
         }),
         sql: z.string({
           description:
-            'The sql to execute. Use ? as placeholders for values. Use ?? as a placeholder for identifiers.',
+            'The SQL to execute. Use ? as placeholders for values. Use ?? as placeholders for identifiers.',
         }),
-        params: z.optional(
-          z.array(
-            z.union([z.string(), z.number(), z.boolean(), z.null()], {
-              description: 'Replacements for the placeholders.',
-            })
-          )
-        ),
+        params: z.optional(z.array(z.union([z.string(), z.number(), z.boolean(), z.null()]))),
       },
       outputSchema: {
         results: z.array(z.any()),
       },
     },
-    async ({ instance, sql, params }) => {
+    async ({ database, sql, params }) => {
       const results = await mysql.read(sql, {
-        instance: instance === 'monolith' ? 'mcfx' : 'mcfx-revops',
+        ...getConnectionOptions(database),
         values: params,
         castJson: true,
         user: 'rcfx-mcp',
@@ -50,33 +43,33 @@ export function register(server: McpServer) {
   server.registerTool(
     'mysql-ddl',
     {
-      description: 'Get the DDL (CREATE TABLE statement) for one or more MySQL tables',
+      description: 'Get the DDL (CREATE TABLE statement) of one or more MySQL tables',
       inputSchema: {
-        tablePath: z.union([z.string(), z.array(z.string())], {
-          description:
-            'Table path(s) in database.table format (e.g., core.sites, identity.audiences)',
+        database: z.string({
+          description: 'Database name (e.g., core, identity, revops)',
+        }),
+        table: z.union([z.string(), z.array(z.string())], {
+          description: 'Table name(s) to get DDL for',
         }),
       },
       outputSchema: {
         ddl: z.string(),
       },
     },
-    async ({ tablePath }) => {
-      const tablePaths = Array.isArray(tablePath) ? tablePath : [tablePath];
+    async ({ database, table }) => {
+      const tables = Array.isArray(table) ? table : [table];
+      const connectionOptions = getConnectionOptions(database);
 
       const results = await Promise.allSettled(
-        tablePaths.map(async (path) => {
-          const instance = path.startsWith('revops') ? 'mcfx-revops' : 'mcfx';
-
+        tables.map(async (tableName) => {
           const result = await mysql.readOne('SHOW CREATE TABLE ??', {
-            values: [path],
-            instance,
+            ...connectionOptions,
+            values: [tableName],
             user: 'rcfx-mcp',
-            label: 'MCP:tool:mysql-execute',
+            label: 'MCP:tool:mysql-ddl',
           });
-
           const ddl = result?.['Create Table'] as string;
-          return `-- ${path} definition\n${ddl}`;
+          return `-- ${database}.${tableName}\n${ddl}`;
         })
       );
 
@@ -86,21 +79,55 @@ export function register(server: McpServer) {
         if (res.status === 'fulfilled') {
           successful.push(res.value);
         } else {
-          failed.push(tablePaths[i]);
+          failed.push(tables[i]);
         }
       }
 
       const formattedDdl = successful.join('\n\n');
-      const structuredContent = { ddl: formattedDdl };
-
       if (failed.length) {
         throw new Error(`${formattedDdl}\n\nFailed tables: ${failed.join(', ')}`);
       }
 
+      const structuredContent = { ddl: formattedDdl };
       return {
         structuredContent,
         content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
       };
     }
   );
+
+  server.registerTool(
+    'mysql-list-tables',
+    {
+      description: 'List tables in a MySQL database',
+      inputSchema: {
+        database: z.string({
+          description: 'Database name (e.g., core, identity, revops)',
+        }),
+      },
+      outputSchema: {
+        tables: z.array(z.string()),
+      },
+    },
+    async ({ database }) => {
+      const results = await mysql.read('SHOW TABLES', {
+        ...getConnectionOptions(database),
+        user: 'rcfx-mcp',
+        label: 'MCP:tool:mysql-list-tables',
+        selectTimeout: TIMEOUT_MS,
+      });
+      const tables = results.map((row) => Object.values(row)[0] as string);
+      return {
+        structuredContent: { tables },
+        content: [{ type: 'text', text: JSON.stringify({ tables }) }],
+      };
+    }
+  );
+}
+
+function getConnectionOptions(database: string) {
+  if (database === 'revops') {
+    return { instance: 'mcfx-revops' as const };
+  }
+  return { instance: 'mcfx' as const, database };
 }
