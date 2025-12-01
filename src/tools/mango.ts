@@ -3,7 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function register(server: McpServer) {
   server.registerTool(
-    'get-screenshot',
+    'mango-get-screenshot',
     {
       description: `Get screenshot image from Mango share URL, which are typically on either the mangoapps.com or tinytake.com domain`,
       inputSchema: {
