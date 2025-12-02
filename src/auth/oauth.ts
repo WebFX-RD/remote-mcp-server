@@ -2,7 +2,6 @@ import express, { Router } from 'express';
 import { log } from '@webfx-rd/cloud-utils/log';
 import { spanner } from '@webfx-rd/cloud-utils/spanner';
 
-import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 
@@ -18,6 +17,7 @@ import type {
   OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
 
+import { mcpAuthRouter } from './mcp-auth-router.js';
 import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from './env-vars.js';
 
 export const OAUTH_PATHS = [
