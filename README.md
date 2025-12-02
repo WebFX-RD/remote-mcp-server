@@ -102,9 +102,27 @@ This sections contains one-time setup instructions which were already completed 
 We support two authentication strategies:
 
 1. **API Key** - Clients send an `x-api-key` header. The key is verified against our authentication service and `req.user` is populated with user details.
-2. **OAuth** - Uses [Client ID Metadata Documents](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-id-metadata-documents) per MCP spec 2025-11-25. Clients provide an HTTPS URL as their `client_id`, and the server fetches their metadata from that URL. Google OAuth is used as the identity provider with pre-registered redirect URIs.
+2. **OAuth** - We support 2 of the 3 [client registration approaches](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-registration-approaches) defined in MCP spec 2025-11-25:
+
+   - **Client ID Metadata Documents** (preferred): Clients provide an HTTPS URL as their `client_id`, and the server fetches their metadata from that URL.
+   - **Dynamic Client Registration** (deprecated): Clients register via the `/register` endpoint. This will be removed once no known client applications rely on it. Per the spec, clients should prefer Client ID Metadata Documents, so DCR usage should naturally fall to zero.
+
+   Google OAuth is used as the identity provider with pre-registered redirect URIs.
 
 Both strategies populate `req.user` with a discriminated union type (`strategy: 'apikey' | 'oauth'`) for consistent downstream handling.
+
+### Spanner Tables
+
+Database:
+
+- Production: [devops.mcp](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/details/tables?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522)
+- Staging: TODO (does not yet exist)
+
+| Table                                                                                                                                                                        | Purpose                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [mcpAuthUsers](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/mcpAuthUsers/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522)         | Authenticated users via Client ID Metadata Documents |
+| [oauthClients](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/oauthClients/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522)         | DCR registered clients (deprecated)                  |
+| [oauthClientUsers](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/oauthClientUsers/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522) | Authenticated users via DCR (deprecated)             |
 
 ## Deployment
 
@@ -122,4 +140,4 @@ Note: the [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/depl
 
 - https://github.com/kym6464/mcp-server-remote was forked into the WebFX-RD GitHub organization
 
-- Replaced Dynamic Client Registration (DCR) with [Client ID Metadata Documents](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-id-metadata-documents) per MCP spec 2025-11-25. This simplifies the auth implementation by fetching client metadata from the client's URL instead of storing registrations in Spanner.
+- Added support for [Client ID Metadata Documents](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-id-metadata-documents) per MCP spec 2025-11-25, which fetches client metadata from the client's URL instead of storing registrations in Spanner. Dynamic Client Registration (DCR) is still supported but deprecated for backwards compatibility with older MCP clients.

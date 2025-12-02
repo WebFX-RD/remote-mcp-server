@@ -36,7 +36,7 @@ export function getOAuthRouter({
   baseUrl: URL;
   mcpServerUrl: URL;
 }): Router {
-  const clientsStore = new ClientMetadataStore();
+  const clientsStore = new ClientStore();
 
   const googleScopes = [
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -306,10 +306,11 @@ class GoogleOAuthProvider implements OAuthServerProvider {
 }
 
 /**
- * Implements Client ID Metadata Documents (MCP spec 2025-11-25).
- * Fetches client metadata from the client's HTTPS URL instead of storing registrations.
+ * Implements OAuthRegisteredClientsStore with support for:
+ * - Client ID Metadata Documents (preferred): fetches metadata from client's HTTPS URL
+ * - Dynamic Client Registration (deprecated): stores client data in Spanner
  */
-class ClientMetadataStore implements OAuthRegisteredClientsStore {
+class ClientStore implements OAuthRegisteredClientsStore {
   async getClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
     const registrationMechanism = getClientRegistrationMechanism(clientId);
 
