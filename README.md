@@ -95,15 +95,34 @@ This sections contains one-time setup instructions which were already completed 
 - [src/auth/](src/auth/) - Authentication module
 - [src/mcp-server.ts](src/mcp-server.ts) - Registers MCP tools
 - [src/tools/](src/tools/) - MCP tool definitions
+- [deploy.sh](./deploy.sh) - Deploys the server to Cloud Run
 
 ### Authentication Strategies
 
 We support two authentication strategies:
 
 1. **API Key** - Clients send an `x-api-key` header. The key is verified against our authentication service and `req.user` is populated with user details.
-2. **OAuth** - Because Google doesn't support Dynamic Client Registration (DCR), we bridge the gap by presenting a DCR-compliant interface to MCP clients while using our pre-registered Google OAuth client credentials. This approach was inspired by [FastMCP's OAuthProxy](https://gofastmcp.com/servers/auth/authentication#oauthproxy).
+2. **OAuth** - We support 2 of the 3 [client registration approaches](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-registration-approaches) defined in MCP spec 2025-11-25:
+
+   - **Client ID Metadata Documents** (preferred): Clients provide an HTTPS URL as their `client_id`, and the server fetches their metadata from that URL.
+   - **Dynamic Client Registration** (deprecated): Clients register via the `/register` endpoint. This will be removed once no known client applications rely on it. Per the spec, clients should prefer Client ID Metadata Documents, so DCR usage should naturally fall to zero.
+
+   Google OAuth is used as the identity provider with pre-registered redirect URIs.
 
 Both strategies populate `req.user` with a discriminated union type (`strategy: 'apikey' | 'oauth'`) for consistent downstream handling.
+
+### Spanner Tables
+
+Database:
+
+- Production: [devops.mcp](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/details/tables?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522)
+- Staging: TODO (does not yet exist)
+
+| Table                                                                                                                                                                        | Purpose                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| [mcpAuthUsers](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/mcpAuthUsers/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522)         | Authenticated users via Client ID Metadata Documents |
+| [oauthClients](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/oauthClients/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522)         | DCR registered clients (deprecated)                  |
+| [oauthClientUsers](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/oauthClientUsers/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522) | Authenticated users via DCR (deprecated)             |
 
 ## Deployment
 
@@ -114,13 +133,12 @@ Note: the [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/depl
 ## Roadmap
 
 - Move this code to the [micro-services](https://github.com/WebFX-RD/micro-services) repository.
-
-- The MCP spec now supports Remote MCP Servers that don't support DCR. This is done by allowing the user to specify a custom client ID and client secret when configuring a server ([screenshot](https://webpagefx.mangoapps.com/msc/MjYxODQwN18yMzQ2Njc0MA)). To use this approach, we would need to create a way to securely share these credentials internally. This is an extra step that isn't necessary now, so it doesn't seem like it's worthwhile at this point. References:
-  - https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers#h_ed638d686b
-  - https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-registration-approaches
+- Deprecate Dynamic Client Registration (DCR) ones we confirm that no clients are using it.
 
 ## History
 
 - This code was initialized from [simpleStatelessStreamableHttp.ts](https://github.com/modelcontextprotocol/typescript-sdk/blob/2da89dbfc5f61d92bfc3ef6663d8886911bd4666/src/examples/server/simpleStatelessStreamableHttp.ts) example from the MCP TypeScript SDK.
 
 - https://github.com/kym6464/mcp-server-remote was forked into the WebFX-RD GitHub organization
+
+- Added support for [Client ID Metadata Documents](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-id-metadata-documents) per MCP spec 2025-11-25, which fetches client metadata from the client's URL instead of storing registrations in Spanner. Dynamic Client Registration (DCR) is still supported but deprecated for backwards compatibility with older MCP clients.

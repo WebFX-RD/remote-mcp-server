@@ -3,7 +3,7 @@
 gcloud run deploy remote-mcp-server \
 --source=. \
 --region=us-central1 \
---set-secrets=/etc/secrets/.env.local=REMOTE_MCP_SERVER:latest \
+--set-secrets=/etc/secrets/.env.local=REMOTE_MCP_SERVER_V2:latest \
 --no-cpu-throttling \
 --no-invoker-iam-check \
 --max-instances=1 \
