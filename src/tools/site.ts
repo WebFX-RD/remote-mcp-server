@@ -10,8 +10,8 @@ export function register(server: McpServer) {
       description: 'Get details about an RCFX site',
       inputSchema: {
         siteId: z.union([
-          z.number({ description: 'A siteId such as 2724' }),
-          z.string({ description: 'A nanoid such as lEVsCz4W' }),
+          z.number().describe('A siteId such as 2724'),
+          z.string().describe('A nanoid such as lEVsCz4W'),
         ]),
       },
       outputSchema: {

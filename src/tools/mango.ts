@@ -7,7 +7,7 @@ export function register(server: McpServer) {
     {
       description: `Get screenshot image from Mango share URL, which are typically on either the mangoapps.com or tinytake.com domain`,
       inputSchema: {
-        share_url: z.string({ description: 'Mango share URL' }).url(),
+        share_url: z.string().url().describe('Mango share URL'),
       },
     },
     async ({ share_url }) => {

@@ -11,12 +11,12 @@
     "inspect": "pnpx @modelcontextprotocol/inspector"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.6",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "@webfx-rd/cloud-utils": "^3.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "google-auth-library": "^10.5.0",
-    "zod": "^3.24.1"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

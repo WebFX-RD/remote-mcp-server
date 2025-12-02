@@ -8,13 +8,13 @@ export function register(server: McpServer) {
     {
       description: 'Execute a SQL statement in Spanner',
       inputSchema: {
-        databasePath: z.string({
-          description: 'Database path in instance.database format (e.g., marketingcloudfx.mcfx)',
-        }),
-        sql: z.string({
-          description: 'The SQL to execute. Use @paramName as placeholders for values.',
-        }),
-        params: z.optional(z.record(z.union([z.string(), z.number(), z.boolean(), z.null()]))),
+        databasePath: z
+          .string()
+          .describe('Database path in instance.database format (e.g., marketingcloudfx.mcfx)'),
+        sql: z.string().describe('The SQL to execute. Use @paramName as placeholders for values.'),
+        params: z.optional(
+          z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+        ),
       },
       outputSchema: {
         results: z.array(z.any()),
@@ -38,10 +38,11 @@ export function register(server: McpServer) {
     {
       description: 'Get the DDL (schema definition) of one or more Spanner tables',
       inputSchema: {
-        table: z.union([z.string(), z.array(z.string())], {
-          description:
-            'Table path(s) in format [instance.]database.table (e.g., mcfx.impressions, iam.sites)',
-        }),
+        table: z
+          .union([z.string(), z.array(z.string())])
+          .describe(
+            'Table path(s) in format [instance.]database.table (e.g., mcfx.impressions, iam.sites)'
+          ),
       },
       outputSchema: {
         ddl: z.string(),
@@ -87,9 +88,9 @@ export function register(server: McpServer) {
         'Get the topology of all Spanner databases and tables organized by instance, database, and table',
       inputSchema: {},
       outputSchema: {
-        topology: z.record(z.record(z.array(z.string())), {
-          description: `{ instance: { database: table[] } }`,
-        }),
+        topology: z
+          .record(z.string(), z.record(z.string(), z.array(z.string())))
+          .describe(`{ instance: { database: table[] } }`),
       },
     },
     async () => {

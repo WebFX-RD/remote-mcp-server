@@ -11,13 +11,12 @@ export function register(server: McpServer) {
     {
       description: 'Execute a SQL statement in MySQL',
       inputSchema: {
-        database: z.string({
-          description: 'Database name (e.g., core, identity, revops)',
-        }),
-        sql: z.string({
-          description:
-            'The SQL to execute. Use ? as placeholders for values. Use ?? as placeholders for identifiers.',
-        }),
+        database: z.string().describe('Database name (e.g., core, identity, revops)'),
+        sql: z
+          .string()
+          .describe(
+            'The SQL to execute. Use ? as placeholders for values. Use ?? as placeholders for identifiers.'
+          ),
         params: z.optional(z.array(z.union([z.string(), z.number(), z.boolean(), z.null()]))),
       },
       outputSchema: {
@@ -45,12 +44,8 @@ export function register(server: McpServer) {
     {
       description: 'Get the DDL (CREATE TABLE statement) of one or more MySQL tables',
       inputSchema: {
-        database: z.string({
-          description: 'Database name (e.g., core, identity, revops)',
-        }),
-        table: z.union([z.string(), z.array(z.string())], {
-          description: 'Table name(s) to get DDL for',
-        }),
+        database: z.string().describe('Database name (e.g., core, identity, revops)'),
+        table: z.union([z.string(), z.array(z.string())]).describe('Table name(s) to get DDL for'),
       },
       outputSchema: {
         ddl: z.string(),
@@ -101,9 +96,7 @@ export function register(server: McpServer) {
     {
       description: 'List tables in a MySQL database',
       inputSchema: {
-        database: z.string({
-          description: 'Database name (e.g., core, identity, revops)',
-        }),
+        database: z.string().describe('Database name (e.g., core, identity, revops)'),
       },
       outputSchema: {
         tables: z.array(z.string()),

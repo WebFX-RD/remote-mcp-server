@@ -35,18 +35,20 @@ export function register(server: McpServer) {
     {
       description: 'Execute a request against an Elasticsearch server',
       inputSchema: {
-        instance: z.enum(instances, { description: instanceDescription }),
-        action: z.enum(['_mapping', '_search', '_count'], {
-          description:
-            'The URL will be constructed as {index}/{action}, where `index` is auto-filled based on the `instance`',
-        }),
+        instance: z.enum(instances).describe(instanceDescription),
+        action: z
+          .enum(['_mapping', '_search', '_count'])
+          .describe(
+            'The URL will be constructed as {index}/{action}, where `index` is auto-filled based on the `instance`'
+          ),
         query: z.optional(
-          z.string({
-            description:
-              'Query parameters, which will be parsed from `application/x-www-form-urlencoded` format',
-          })
+          z
+            .string()
+            .describe(
+              'Query parameters, which will be parsed from `application/x-www-form-urlencoded` format'
+            )
         ),
-        body: z.optional(z.string({ description: 'Request body as a JSON string' })),
+        body: z.optional(z.string().describe('Request body as a JSON string')),
       },
       outputSchema: {
         results: z.any(),
@@ -105,7 +107,7 @@ export function register(server: McpServer) {
     {
       description: 'Get the mapping (schema) for an Elasticsearch index',
       inputSchema: {
-        instance: z.enum(instances, { description: instanceDescription }),
+        instance: z.enum(instances).describe(instanceDescription),
       },
       outputSchema: {
         mapping: z.any(),

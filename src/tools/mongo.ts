@@ -40,34 +40,28 @@ export function register(server: McpServer) {
     {
       description: 'Execute a query against a MongoDB collection',
       inputSchema: {
-        collection: z.string({
-          description: 'Collection name',
-        }),
+        collection: z.string().describe('Collection name'),
         operation: z
-          .enum(['find', 'aggregate'], {
-            description: 'Find for basic queries, aggregate for complex operations',
-          })
-          .default('find'),
-        query: z.any({
-          description:
-            'Filter object for find operations (e.g., { _id: "someId" }), or pipeline array for aggregate operations',
-        }),
+          .enum(['find', 'aggregate'])
+          .default('find')
+          .describe('Find for basic queries, aggregate for complex operations'),
+        query: z
+          .any()
+          .describe(
+            'Filter object for find operations (e.g., { _id: "someId" }), or pipeline array for aggregate operations'
+          ),
         options: z.optional(
           z
-            .object(
-              {},
-              {
-                description:
-                  'Additional options for find operations (limit, sort, projection, etc.)',
-              }
-            )
+            .object({})
             .passthrough()
+            .describe('Additional options for find operations (limit, sort, projection, etc.)')
         ),
         preview: z.optional(
-          z.number({
-            description:
-              'When set, runs results through util.inspect with specified depth to constrain size for exploration (e.g., preview=2)',
-          })
+          z
+            .number()
+            .describe(
+              'When set, runs results through util.inspect with specified depth to constrain size for exploration (e.g., preview=2)'
+            )
         ),
         limit: z.optional(
           z

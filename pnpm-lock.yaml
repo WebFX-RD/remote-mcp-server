@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.0.6
-        version: 1.22.0
+        specifier: ^1.24.0
+        version: 1.24.0(zod@4.1.13)
       '@webfx-rd/cloud-utils':
         specifier: ^3.0.0
-        version: 3.0.847
+        version: 3.0.848
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -24,8 +24,8 @@ importers:
         specifier: ^10.5.0
         version: 10.5.0
       zod:
-        specifier: ^3.24.1
-        version: 3.25.76
+        specifier: ^4.1.13
+        version: 4.1.13
     devDependencies:
       '@types/cors':
         specifier: ^2.8.17
@@ -453,11 +453,12 @@ packages:
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
 
-  '@modelcontextprotocol/sdk@1.22.0':
-    resolution: {integrity: sha512-VUpl106XVTCpDmTBil2ehgJZjhyLY2QZikzF8NvTXtLRF1CvO5iEE2UNZdVIUer35vFOwMKYeUGbjJtvPWan3g==}
+  '@modelcontextprotocol/sdk@1.24.0':
+    resolution: {integrity: sha512-D8h5KXY2vHFW8zTuxn2vuZGN0HGrQ5No6LkHwlEA9trVgNdPL3TF1dSqKA7Dny6BbBYKSW/rOBDXdC8KJAjUCg==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
+      zod: ^3.25 || ^4.0
     peerDependenciesMeta:
       '@cfworker/json-schema':
         optional: true
@@ -1072,8 +1073,8 @@ packages:
   '@types/whatwg-url@8.2.2':
     resolution: {integrity: sha512-FtQu10RWgn3D9U4aazdwIE2yzphmTJREDqNdODHrbrZmmMqI0vMheC/6NE/J1Yveaj8H+ela+YwWTjq5PGmuhA==}
 
-  '@webfx-rd/cloud-utils@3.0.847':
-    resolution: {integrity: sha512-NHhyGUHLCxSAzbf9DsofGXGd4tsmafAyDZfDe2983z+gZb0Hrdo90SH54HfLDoFBPgG3LaHgfO7I6xsR2aDYSA==, tarball: https://npm.pkg.github.com/download/@webfx-rd/cloud-utils/3.0.847/728aa47eb1839e082b167386dbef120e30eb3c3d}
+  '@webfx-rd/cloud-utils@3.0.848':
+    resolution: {integrity: sha512-joQEJZxYNIBTMX+TL5glcB12CS3KzTp83TTHlp2a0wG+rGJXUrsWL8KP1b10DcwZLSZcOx5Mhd2gCAz3zWklmg==, tarball: https://npm.pkg.github.com/download/@webfx-rd/cloud-utils/3.0.848/b4ebe3199e4a555495f1b32f29c7b67e82d64730}
 
   '@webfx-rd/schema@3.0.44':
     resolution: {integrity: sha512-fwn0SiMs5c6XMhvdW22x++a4U/XEYQmbgZbFSCWDqUrvGKNTrUk1YWwq301DYEdcTmQxOu2ZEbVquwJ5TZTg8Q==, tarball: https://npm.pkg.github.com/download/@webfx-rd/schema/3.0.44/8843275d240a40dc2edcbe562758ea49f396760f}
@@ -2000,6 +2001,9 @@ packages:
 
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
+
+  jose@6.1.3:
+    resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -2977,8 +2981,8 @@ packages:
     peerDependencies:
       zod: ^3.25 || ^4
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+  zod@4.1.13:
+    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
 
 snapshots:
 
@@ -3511,7 +3515,7 @@ snapshots:
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
-  '@modelcontextprotocol/sdk@1.22.0':
+  '@modelcontextprotocol/sdk@1.24.0(zod@4.1.13)':
     dependencies:
       ajv: 8.17.1
       ajv-formats: 3.0.1(ajv@8.17.1)
@@ -3522,10 +3526,11 @@ snapshots:
       eventsource-parser: 3.0.6
       express: 5.1.0
       express-rate-limit: 7.5.1(express@5.1.0)
+      jose: 6.1.3
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.0(zod@3.25.76)
+      zod: 4.1.13
+      zod-to-json-schema: 3.25.0(zod@4.1.13)
     transitivePeerDependencies:
       - supports-color
 
@@ -4347,7 +4352,7 @@ snapshots:
       '@types/node': 22.19.1
       '@types/webidl-conversions': 7.0.3
 
-  '@webfx-rd/cloud-utils@3.0.847':
+  '@webfx-rd/cloud-utils@3.0.848':
     dependencies:
       '@aws-crypto/crc32c': 5.0.0
       '@elastic/elasticsearch': 8.15.0
@@ -5567,6 +5572,8 @@ snapshots:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
 
+  jose@6.1.3: {}
+
   js-tokens@4.0.0: {}
 
   jsesc@3.1.0: {}
@@ -6637,8 +6644,8 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod-to-json-schema@3.25.0(zod@3.25.76):
+  zod-to-json-schema@3.25.0(zod@4.1.13):
     dependencies:
-      zod: 3.25.76
+      zod: 4.1.13
 
-  zod@3.25.76: {}
+  zod@4.1.13: {}
