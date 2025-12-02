@@ -1,22 +1,24 @@
+import express, { Router } from 'express';
 import { log } from '@webfx-rd/cloud-utils/log';
 import { spanner } from '@webfx-rd/cloud-utils/spanner';
 import { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js';
 import { OAuthClientInformationFull, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
-import express, { Request, Response, Router } from 'express';
 import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
 import { OAuthServerProvider } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { OAuthTokensSchema } from '@modelcontextprotocol/sdk/shared/auth.js';
 
+import type { Request, Response } from 'express';
 import type { GenerateAuthUrlOpts } from 'google-auth-library';
 import type { AuthorizationParams } from '@modelcontextprotocol/sdk/server/auth/provider.js';
+
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from './env-vars.js';
 
 export const OAUTH_PATHS = [
   '/.well-known/oauth-authorization-server',
   '/.well-known/oauth-protected-resource',
   '/authorize',
   '/token',
-  '/register',
   '/introspect',
 ];
 
@@ -27,14 +29,7 @@ export function getOAuthRouter({
   baseUrl: URL;
   mcpServerUrl: URL;
 }): Router {
-  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-    throw new Error(
-      'Missing required environment variables: GOOGLE_CLIENT_ID and/or GOOGLE_CLIENT_SECRET'
-    );
-  }
-
-  const clientsStore = new SpannerClientsStore();
+  const clientsStore = new ClientMetadataStore();
 
   const googleScopes = [
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -91,7 +86,7 @@ export function getOAuthRouter({
 
 /**
  * Implements OAuthServerProvider to handle OAuth flows with Google as the identity provider.
- * This provider bridges the gap between MCP's DCR-compliant interface and Google OAuth.
+ * Uses Client ID Metadata Documents (MCP spec 2025-11-25) for client identification.
  */
 class GoogleOAuthProvider implements OAuthServerProvider {
   private readonly _clientsStore: OAuthRegisteredClientsStore;
@@ -173,28 +168,28 @@ class GoogleOAuthProvider implements OAuthServerProvider {
       throw new Error('Access restricted to @webfx.com email addresses');
     }
 
-    const { client_id: oauthClientId } = client;
+    const { client_id: clientId } = client;
     await spanner.transaction({
       databasePath: 'devops.mcp',
       run: async (transaction) => {
         const [rows] = await spanner.query(
           `
           SELECT 1
-          FROM oauthClientUsers
+          FROM mcpAuthUsers
           WHERE
-            oauthClientId = @oauthClientId AND
+            clientId = @clientId AND
             googleUserId = @googleUserId
           `,
-          { transaction, params: { oauthClientId, googleUserId } }
+          { transaction, params: { clientId, googleUserId } }
         );
         if (rows.length) {
           return;
         }
-        log.info(`New user authenticated: ${email}`, { oauthClientId, googleUserId });
+        log.info(`New user authenticated: ${email}`, { clientId, googleUserId });
         spanner.insert(
-          'oauthClientUsers',
+          'mcpAuthUsers',
           {
-            oauthClientId,
+            clientId,
             googleUserId,
             email,
             tokenInfo,
@@ -264,31 +259,27 @@ class GoogleOAuthProvider implements OAuthServerProvider {
   }
 }
 
-export class SpannerClientsStore implements OAuthRegisteredClientsStore {
-  async getClient(clientId: string) {
-    const [rows] = await spanner.query(
-      'SELECT data FROM oauthClients WHERE oauthClientId = @clientId',
-      {
-        databasePath: 'devops.mcp',
-        params: { clientId },
-      }
-    );
-    return (rows[0] as { data: OAuthClientInformationFull } | undefined)?.data;
-  }
-
-  async registerClient(clientMetadata: OAuthClientInformationFull) {
-    log.info('Registering OAuth client', clientMetadata);
-    try {
-      await spanner.insert('devops.mcp.oauthClients', {
-        oauthClientId: clientMetadata.client_id,
-        data: clientMetadata,
-        updatedAt: spanner.COMMIT_TIMESTAMP,
-      });
-      return clientMetadata;
-    } catch (error) {
-      log.error('Failed to register OAuth client:', error);
-      throw error;
+/**
+ * Implements Client ID Metadata Documents (MCP spec 2025-11-25).
+ * Fetches client metadata from the client's HTTPS URL instead of storing registrations.
+ */
+class ClientMetadataStore implements OAuthRegisteredClientsStore {
+  async getClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
+    if (!clientId.startsWith('https://')) {
+      return undefined;
     }
+
+    const response = await fetch(clientId);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch client metadata: ${response.status}`);
+    }
+
+    const metadata = (await response.json()) as OAuthClientInformationFull;
+    if (metadata.client_id !== clientId) {
+      throw new Error('client_id in metadata does not match the URL');
+    }
+
+    return metadata;
   }
 }
 
