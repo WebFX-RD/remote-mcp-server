@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authorizationHandler } from '@modelcontextprotocol/sdk/server/auth/handlers/authorize.js';
 import { tokenHandler } from '@modelcontextprotocol/sdk/server/auth/handlers/token.js';
+import { clientRegistrationHandler } from '@modelcontextprotocol/sdk/server/auth/handlers/register.js';
 
 import type { OAuthServerProvider } from '@modelcontextprotocol/sdk/server/auth/provider.js';
 import type {
@@ -40,6 +41,11 @@ export function mcpAuthRouter({
     client_id_metadata_document_supported: true,
   };
 
+  // TODO: delete after we stop supporting DCR
+  if (provider.clientsStore.registerClient) {
+    oauthMetadata.registration_endpoint = new URL('/register', issuerUrl).href;
+  }
+
   const protectedResourceMetadata: OAuthProtectedResourceMetadata = {
     resource: resourceServerUrl.href,
     authorization_servers: [issuerUrl.href],
@@ -50,6 +56,11 @@ export function mcpAuthRouter({
 
   router.use('/authorize', authorizationHandler({ provider }));
   router.use('/token', tokenHandler({ provider }));
+
+  // TODO: delete after we stop supporting DCR
+  if (oauthMetadata.registration_endpoint) {
+    router.use('/register', clientRegistrationHandler({ clientsStore: provider.clientsStore }));
+  }
 
   router.get('/.well-known/oauth-authorization-server', (_req, res) => {
     res.json(oauthMetadata);

@@ -26,6 +26,7 @@ export const OAUTH_PATHS = [
   '/authorize',
   '/token',
   '/introspect',
+  '/register', // TODO: delete after we stop supporting DCR
 ];
 
 export function getOAuthRouter({
@@ -175,36 +176,75 @@ class GoogleOAuthProvider implements OAuthServerProvider {
     }
 
     const { client_id: clientId } = client;
-    await spanner.transaction({
-      databasePath: 'devops.mcp',
-      run: async (transaction) => {
-        const [rows] = await spanner.query(
-          `
+    const registrationMechanism = getClientRegistrationMechanism(clientId);
+    if (registrationMechanism === 'CIMD') {
+      await spanner.transaction({
+        databasePath: 'devops.mcp',
+        run: async (transaction) => {
+          const [rows] = await spanner.query(
+            `
           SELECT 1
           FROM mcpAuthUsers
           WHERE
             clientId = @clientId AND
             googleUserId = @googleUserId
           `,
-          { transaction, params: { clientId, googleUserId } }
-        );
-        if (rows.length) {
-          return;
-        }
-        log.info(`New user authenticated: ${email}`, { clientId, googleUserId });
-        spanner.insert(
-          'mcpAuthUsers',
-          {
-            clientId,
-            googleUserId,
-            email,
-            tokenInfo,
-            updatedAt: spanner.COMMIT_TIMESTAMP,
-          },
-          { transaction }
-        );
-      },
-    });
+            { transaction, params: { clientId, googleUserId } }
+          );
+          if (rows.length) {
+            return;
+          }
+          log.info(`New user authenticated: ${email}`, { clientId, googleUserId });
+          spanner.insert(
+            'mcpAuthUsers',
+            {
+              clientId,
+              googleUserId,
+              email,
+              tokenInfo,
+              updatedAt: spanner.COMMIT_TIMESTAMP,
+            },
+            { transaction }
+          );
+        },
+      });
+    } else {
+      // TODO: delete after we stop supporting DCR
+      const oauthClientId = clientId;
+      await spanner.transaction({
+        databasePath: 'devops.mcp',
+        run: async (transaction) => {
+          const [rows] = await spanner.query(
+            `
+            SELECT 1
+            FROM oauthClientUsers
+            WHERE
+              oauthClientId = @oauthClientId AND
+              googleUserId = @googleUserId
+            `,
+            {
+              transaction,
+              params: { oauthClientId, googleUserId },
+            }
+          );
+          if (rows.length) {
+            return;
+          }
+          log.info(`[DCR] New user authenticated ${email}`, { oauthClientId, googleUserId });
+          spanner.insert(
+            'oauthClientUsers',
+            {
+              oauthClientId,
+              googleUserId,
+              email,
+              tokenInfo,
+              updatedAt: spanner.COMMIT_TIMESTAMP,
+            },
+            { transaction }
+          );
+        },
+      });
+    }
 
     return OAuthTokensSchema.parse(setExpiresIn(tokens));
   }
@@ -271,8 +311,18 @@ class GoogleOAuthProvider implements OAuthServerProvider {
  */
 class ClientMetadataStore implements OAuthRegisteredClientsStore {
   async getClient(clientId: string): Promise<OAuthClientInformationFull | undefined> {
-    if (!clientId.startsWith('https://')) {
-      return undefined;
+    const registrationMechanism = getClientRegistrationMechanism(clientId);
+
+    if (registrationMechanism === 'DCR') {
+      log.info(`[DCR] getting client ${clientId}`);
+      const [rows] = await spanner.query(
+        'SELECT data FROM oauthClients WHERE oauthClientId = @clientId',
+        {
+          databasePath: 'devops.mcp',
+          params: { clientId },
+        }
+      );
+      return (rows[0] as { data: OAuthClientInformationFull } | undefined)?.data;
     }
 
     const response = await fetch(clientId);
@@ -287,6 +337,21 @@ class ClientMetadataStore implements OAuthRegisteredClientsStore {
 
     return metadata;
   }
+
+  async registerClient(clientMetadata: OAuthClientInformationFull) {
+    log.info('[DCR] Registering client', clientMetadata);
+    try {
+      await spanner.insert('devops.mcp.oauthClients', {
+        oauthClientId: clientMetadata.client_id,
+        data: clientMetadata,
+        updatedAt: spanner.COMMIT_TIMESTAMP,
+      });
+      return clientMetadata;
+    } catch (error) {
+      log.error('[DCR] Failed to register client:', error);
+      throw error;
+    }
+  }
 }
 
 function setExpiresIn(tokens: any) {
@@ -294,4 +359,18 @@ function setExpiresIn(tokens: any) {
     tokens.expires_in = Math.floor((tokens.expiry_date - Date.now()) / 1000);
   }
   return tokens;
+}
+
+/**
+ * Determine the client registration mechanism.
+ * https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-registration-approaches
+ */
+function getClientRegistrationMechanism(clientId: string) {
+  if (typeof clientId !== 'string') {
+    throw new Error(`Expected clientId to be a string, received ${clientId}`);
+  }
+  if (clientId.startsWith('https://')) {
+    return 'CIMD'; // Client ID Metadata Documents
+  }
+  return 'DCR'; // Dynamic Client Registration
 }
