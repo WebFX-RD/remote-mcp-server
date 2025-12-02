@@ -134,6 +134,7 @@ Note: the [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/depl
 ## Roadmap
 
 - Move this code to the [micro-services](https://github.com/WebFX-RD/micro-services) repository.
+- Improve error logging. As of 2025-12-02, the [typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) swallows some errors, which makes production issues hard to debug.
 - Deprecate Dynamic Client Registration (DCR) ones we confirm that no clients are using it.
 
 ## History
