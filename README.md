@@ -85,6 +85,7 @@ This sections contains one-time setup instructions which were already completed 
      - You can get your API Key from https://app.webfx.com/my-info/api-keys
    - For **OAuth** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OF8yMzQ2NjY3MQ)
      - For the Guided OAuth Flow, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2OV8yMzQ2NjY3Mg)
+     - Note: as of 2025-12-02, neither [MCP Inspector](https://github.com/modelcontextprotocol/inspector) nor Claude Desktop support the [Client ID Metadata Documents](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-id-metadata-documents) mechanism for [client registration](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#client-registration-approaches).
 5. To test the MCP server, click the Connect button.
 
 ## Development
