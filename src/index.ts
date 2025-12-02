@@ -32,8 +32,8 @@ async function mcpPostHandler(req: Request, res: Response) {
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
     res.on('close', () => {
-      transport.close();
-      server.close();
+      transport.close().catch((e) => log.error('Failed to close transport:', e));
+      server.close().catch((e) => log.error('Failed to close server:', e));
     });
   } catch (error) {
     log.error('Failed to handle MCP request:', error);
