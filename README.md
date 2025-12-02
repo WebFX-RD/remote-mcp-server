@@ -78,7 +78,7 @@ This sections contains one-time setup instructions which were already completed 
    - **Transport Type:** Streamable HTTP
    - **URL:**
      - Local: http://localhost:3030/mcp
-     - Production: https://remote-mcp-server-979839513730.us-central1.run.app/mcp
+     - Production: https://remote-mcp-server-v2-979839513730.us-central1.run.app/mcp
    - **Connection Type:** Direct
 4. We support two [authentication strategies](#authentication-strategies):
    - For **API Key** authentication, see [this diagram](https://webpagefx.mangoapps.com/msc/MjYxODM2NV8yMzQ2NjY2NQ)

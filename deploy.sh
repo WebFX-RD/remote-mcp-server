@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gcloud run deploy remote-mcp-server \
+gcloud run deploy remote-mcp-server-v2 \
 --source=. \
 --region=us-central1 \
 --set-secrets=/etc/secrets/.env.local=REMOTE_MCP_SERVER:latest \
