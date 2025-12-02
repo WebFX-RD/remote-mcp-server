@@ -1,5 +1,5 @@
 {
-  "name": "remote-mcp-server-v2",
+  "name": "remote-mcp-server",
   "version": "1.0.0",
   "description": "Remote MCP Server",
   "type": "module",
