@@ -95,6 +95,7 @@ This sections contains one-time setup instructions which were already completed 
 - [src/auth/](src/auth/) - Authentication module
 - [src/mcp-server.ts](src/mcp-server.ts) - Registers MCP tools
 - [src/tools/](src/tools/) - MCP tool definitions
+- [deploy.sh](./deploy.sh) - Deploys the server to Cloud Run
 
 ### Authentication Strategies
 
