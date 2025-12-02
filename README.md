@@ -133,6 +133,7 @@ Note: the [--set-secrets](https://cloud.google.com/sdk/gcloud/reference/run/depl
 ## Roadmap
 
 - Move this code to the [micro-services](https://github.com/WebFX-RD/micro-services) repository.
+- Deprecate Dynamic Client Registration (DCR) ones we confirm that no clients are using it.
 
 ## History
 
