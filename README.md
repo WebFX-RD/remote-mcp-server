@@ -1,6 +1,6 @@
 # mcp-server-remote
 
-This repository contains the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview.
+This service runs the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview.
 
 ## Getting Started
 
