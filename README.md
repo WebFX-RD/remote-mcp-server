@@ -113,6 +113,28 @@ We support two authentication strategies:
 
 Both strategies populate `req.user` with a discriminated union type (`strategy: 'apikey' | 'oauth'`) for consistent downstream handling.
 
+#### OAuth Limitation
+
+OAuth only works with clients whose redirect URIs are pre-registered in Google Cloud Console. Clients like Claude Code use random localhost ports (e.g., `http://localhost:49999/callback`), which cannot be pre-registered. For these clients, use API Key authentication instead.
+
+<details>
+<summary>Potential Workaround (not implemented)</summary>
+
+A proxy/relay approach could support dynamic redirect URIs:
+
+1. Client calls `GET /authorize` with `redirect_uri=http://localhost:{random}/callback&state=client_state`
+2. Server generates a `session_id` and stores `{session_id → {redirect_uri, client_state}}` in Redis
+3. Server redirects to Google with our fixed redirect URI and `state=session_id`
+4. Google redirects to `/oauth/callback?code=...&state=session_id`
+5. Server looks up `session_id` → retrieves original redirect URI and client's state
+6. Server stores `{code → true}` to mark it as proxied
+7. Server redirects to `http://localhost:{random}/callback?code=...&state=client_state`
+8. During token exchange, server detects proxied codes and substitutes the fixed redirect URI when calling Google
+
+We decided not to implement this because API Key authentication is simpler and sufficient for CLI tools like Claude Code.
+
+</details>
+
 ### Spanner Tables
 
 Database:
