@@ -3,9 +3,13 @@ import { z } from 'zod';
 import { mysql } from '@webfx-rd/cloud-utils/mysql';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
+import { classifySiteId } from './_shared.js';
+
+export const SITE_DETAILS_TOOL_NAME = 'site-details';
+
 export function register(server: McpServer) {
   server.registerTool(
-    'site-details',
+    SITE_DETAILS_TOOL_NAME,
     {
       description: 'Get details about an RCFX site. Accepts either a numeric and alphanumeric id.',
       inputSchema: {
@@ -18,14 +22,9 @@ export function register(server: McpServer) {
       },
     },
     async ({ id }) => {
-      let where: { site_id: number } | { nanoid: string };
-      if (typeof id === 'number') {
-        where = { site_id: id };
-      } else if (/^\d+$/.test(id)) {
-        where = { site_id: Number(id) };
-      } else {
-        where = { nanoid: id };
-      }
+      const { type, value } = classifySiteId(id);
+      const where: { site_id: number } | { nanoid: string } =
+        type === 'numeric' ? { site_id: value } : { nanoid: value };
       const [whereClause, whereValues] = mysql.buildWhere(where);
       const site = await mysql.readOne(
         `SELECT 

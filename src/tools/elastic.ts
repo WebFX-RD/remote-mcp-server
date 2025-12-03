@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { elasticsearch } from '@webfx-rd/cloud-utils/elasticsearch';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
+import { parseQueryForSiteId } from './_shared.js';
+import { SITE_DETAILS_TOOL_NAME } from './site.js';
+
 const instances = [
   'identity-contact',
   'identity-company',
@@ -19,14 +22,20 @@ const instanceDescription =
   'impressions: contains entities such as forms, chats, calls, sms, visits.\n' +
   'revops: contains deals';
 
-const instanceConfig: Record<(typeof instances)[number], [string, string]> = {
-  'identity-contact': ['elasticsearch-mcfx', 'identity-contact'],
-  'identity-company': ['elasticsearch-mcfx', 'identity-company'],
-  'identity-company-session': ['elasticsearch-company-session', 'identity-company-session'],
-  'idp-person': ['elasticsearch-idp', 'person'],
-  'idp-company': ['elasticsearch-idp', 'companies'],
-  impressions: ['elasticsearch-impressions', 'impressions'],
-  revops: ['elasticsearch-revops', 'deals'],
+type SiteIdType = 'numeric' | 'alphanumeric' | 'none';
+
+const instanceConfig: Record<(typeof instances)[number], [string, string, SiteIdType]> = {
+  'identity-contact': ['elasticsearch-mcfx', 'identity-contact', 'numeric'],
+  'identity-company': ['elasticsearch-mcfx', 'identity-company', 'numeric'],
+  'identity-company-session': [
+    'elasticsearch-company-session',
+    'identity-company-session',
+    'numeric',
+  ],
+  'idp-person': ['elasticsearch-idp', 'person', 'none'],
+  'idp-company': ['elasticsearch-idp', 'companies', 'none'],
+  impressions: ['elasticsearch-impressions', 'impressions', 'alphanumeric'],
+  revops: ['elasticsearch-revops', 'deals', 'numeric'],
 };
 
 export function register(server: McpServer) {
@@ -46,10 +55,20 @@ export function register(server: McpServer) {
       },
       outputSchema: {
         results: z.any(),
+        warning: z.optional(z.string()),
       },
     },
     async ({ instance, action, query, body }) => {
-      const [path, index] = instanceConfig[instance];
+      const [path, index, expectedSiteIdType] = instanceConfig[instance];
+
+      let warning: string | undefined;
+      if (expectedSiteIdType !== 'none' && body) {
+        const result = parseQueryForSiteId(body);
+        if (result && result.type !== expectedSiteIdType) {
+          warning = `Instance ${instance} expects ${expectedSiteIdType} site IDs, but you provided a ${result.type} site ID.`;
+          warning += ` If the results are unexpected (e.g. empty), use the ${SITE_DETAILS_TOOL_NAME} tool to convert and try again.`;
+        }
+      }
 
       const client = await elasticsearch.getClient({ path });
       const response = (await client.transport.request({
@@ -70,9 +89,10 @@ export function register(server: McpServer) {
         results = response;
       }
 
+      const structuredContent = { results, warning };
       return {
-        structuredContent: { results },
-        content: [{ type: 'text', text: JSON.stringify({ results }) }],
+        structuredContent,
+        content: [{ type: 'text', text: JSON.stringify(structuredContent) }],
       };
     }
   );
