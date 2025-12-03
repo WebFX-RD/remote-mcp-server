@@ -65,6 +65,7 @@ This sections contains one-time setup instructions which were already completed 
    - From https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers:
      - https://claude.ai/api/mcp/auth_callback
      - https://claude.com/api/mcp/auth_callback
+   - http://localhost:49498/callback - Used by Claude Code
 
 2. Once you have your Client ID and Client Secret, copy [.env.example](.env.example) to `.env.local` and replace the fake values.
 
