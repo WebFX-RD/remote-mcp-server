@@ -25,7 +25,7 @@ async function mcpPostHandler(req: Request, res: Response) {
   log.info('Handling MCP request from user:', req.user);
   const server = getMcpServer();
   try {
-    const transport: StreamableHTTPServerTransport = new StreamableHTTPServerTransport({
+    const transport = new StreamableHTTPServerTransport({
       // Session IDs are not useful in stateless mode
       sessionIdGenerator: undefined,
     });
