@@ -7,25 +7,33 @@ export function register(server: McpServer) {
   server.registerTool(
     'site-details',
     {
-      description: 'Get details about an RCFX site',
+      description: 'Get details about an RCFX site. Accepts either a numeric and alphanumeric id.',
       inputSchema: {
-        siteId: z.union([
-          z.number().describe('A siteId such as 2724'),
-          z.string().describe('A nanoid such as lEVsCz4W'),
-        ]),
+        id: z.union([z.number(), z.string()]),
       },
       outputSchema: {
-        siteId: z.number(),
-        nanoid: z.string(),
+        numericId: z.number().describe('AKA MySQL site id'),
+        alphanumericId: z.string().describe('AKA Spanner site id or nanoid'),
         name: z.string(),
       },
     },
-    async ({ siteId }) => {
-      const where = typeof siteId === 'number' ? { site_id: siteId } : { nanoid: siteId };
-      // @ts-expect-error
+    async ({ id }) => {
+      let where: { site_id: number } | { nanoid: string };
+      if (typeof id === 'number') {
+        where = { site_id: id };
+      } else if (/d+/.test(id)) {
+        where = { site_id: Number(id) };
+      } else {
+        where = { nanoid: id };
+      }
       const [whereClause, whereValues] = mysql.buildWhere(where);
-      const site = await mysql.readOne<{ siteId: number; nanoid: string; name: string }>(
-        `SELECT site_id, nanoid, name FROM sites WHERE ${whereClause}`,
+      const site = await mysql.readOne(
+        `SELECT 
+          site_id AS numericId, 
+          nanoid AS alphanumericId, 
+          name 
+        FROM sites 
+        WHERE ${whereClause}`,
         {
           instance: 'mcfx',
           database: 'core',
