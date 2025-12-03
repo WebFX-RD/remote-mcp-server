@@ -21,7 +21,7 @@ export function register(server: McpServer) {
       let where: { site_id: number } | { nanoid: string };
       if (typeof id === 'number') {
         where = { site_id: id };
-      } else if (/d+/.test(id)) {
+      } else if (/^\d+$/.test(id)) {
         where = { site_id: Number(id) };
       } else {
         where = { nanoid: id };
