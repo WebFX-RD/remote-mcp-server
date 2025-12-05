@@ -98,8 +98,22 @@ async function fetchImageAsBase64(fileId: string, salt: string, shareUrl: string
 
   const arrayBuffer = await response.arrayBuffer();
   let buffer: Buffer = Buffer.from(arrayBuffer);
-  if (contentType === 'image/png') {
-    buffer = await sharp(buffer).jpeg({ quality: 85 }).toBuffer();
+
+  let pipeline = sharp(buffer);
+  const metadata = await pipeline.metadata();
+  const maxDimension = Math.max(metadata.width ?? 0, metadata.height ?? 0);
+
+  if (contentType === 'image/png' || maxDimension > 5000) {
+    pipeline = sharp(buffer);
+    if (maxDimension > 5000) {
+      pipeline = pipeline.resize({
+        width: 5000,
+        height: 5000,
+        fit: 'inside',
+        withoutEnlargement: true,
+      });
+    }
+    buffer = await pipeline.jpeg({ quality: 85 }).toBuffer();
     contentType = 'image/jpeg';
   }
 
