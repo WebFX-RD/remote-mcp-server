@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -85,21 +86,23 @@ async function fetchImageAsBase64(fileId: string, salt: string, shareUrl: string
     downloadUrl = `https://webpagefx.mangoapps.com/mjanus/f/${fileId}?salt=${salt}`;
   }
 
-  const response = await fetch(downloadUrl, {
-    signal: AbortSignal.timeout(30000),
-  });
-
+  const response = await fetch(downloadUrl, { signal: AbortSignal.timeout(10000) });
   if (!response.ok) {
     throw new Error(`Failed to download image: HTTP ${response.status}`);
   }
 
-  const contentType = response.headers.get('content-type');
+  let contentType = response.headers.get('content-type');
   if (!contentType) {
     throw new Error('Image content type not provided by server');
   }
 
   const arrayBuffer = await response.arrayBuffer();
-  const base64 = Buffer.from(arrayBuffer).toString('base64');
+  let buffer: Buffer = Buffer.from(arrayBuffer);
+  if (contentType === 'image/png') {
+    buffer = await sharp(buffer).jpeg({ quality: 85 }).toBuffer();
+    contentType = 'image/jpeg';
+  }
 
+  const base64 = buffer.toString('base64');
   return { base64, contentType };
 }
