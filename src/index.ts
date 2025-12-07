@@ -27,7 +27,11 @@ app.post('/mcp', async (req: Request, res: Response) => {
   if (!req.user) {
     throw new Error('This should never happen: User does not exist');
   }
-  log.info('Handling MCP request from user:', req.user);
+  log.info('Handling POST /mcp request', {
+    user: req.user,
+    'x-mcp-session-id': req.headers['x-mcp-session-id'],
+    body: req.body,
+  });
 
   // Generate or validate session id:
   // https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#session-management
