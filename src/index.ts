@@ -29,7 +29,7 @@ app.post('/mcp', async (req: Request, res: Response) => {
   }
   log.info('Handling POST /mcp request', {
     user: req.user,
-    'x-mcp-session-id': req.headers['x-mcp-session-id'],
+    'mcp-session-id': req.headers['mcp-session-id'],
     body: req.body,
   });
 
