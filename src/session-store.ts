@@ -10,10 +10,15 @@ export async function createSession(email: string): Promise<string> {
   return sessionId;
 }
 
-export async function validateSession(sessionId: string, email: string): Promise<boolean> {
+export async function validateSession(sessionId: string, email: string) {
   const redis = getRedisClient();
   const storedEmail = await redis.get(`mcp:sessions:${sessionId}`);
-  return storedEmail === email;
+  if (!storedEmail) {
+    return 'Failed to find sessionId';
+  }
+  if (storedEmail !== email) {
+    return `Expected email ${storedEmail}, received ${email}`;
+  }
 }
 
 export async function get<T>(sessionId: string, key: string): Promise<T | undefined> {
