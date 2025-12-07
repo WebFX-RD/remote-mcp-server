@@ -2,3 +2,4 @@ onlyBuiltDependencies:
   - '@sentry-internal/node-cpu-profiler'
   - esbuild
   - protobufjs
+  - sharp
