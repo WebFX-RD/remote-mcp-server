@@ -42,11 +42,13 @@ export function register(server: McpServer) {
   server.registerTool(
     'elastic-execute',
     {
-      description: 'Execute a request against an Elasticsearch server',
+      description: `\
+Execute an Elasticsearch query
+IMPORTANT: Do not guess field names (use the elastic-mapping tool first)`,
       inputSchema: {
         instance: z.enum(instances).describe(instanceDescription),
         action: z
-          .enum(['_mapping', '_search', '_count'])
+          .enum(['_search', '_count'])
           .describe(
             'The URL will be constructed as {index}/{action}, where {index} is resolved from {instance}'
           ),
@@ -100,7 +102,7 @@ export function register(server: McpServer) {
   server.registerTool(
     'elastic-mapping',
     {
-      description: 'Get the mapping (schema) for an Elasticsearch index',
+      description: 'Get the mapping of an Elasticsearch index',
       inputSchema: {
         instance: z.enum(instances).describe(instanceDescription),
       },
