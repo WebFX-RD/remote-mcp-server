@@ -66,12 +66,13 @@ Note: the elastic-mapping tool must be called for the instance before this tool`
         throw new Error('Session ID is required');
       }
 
-      const mappingsCalled = (await sessionStore.get<string[]>(sessionId, 'elasticMappings')) ?? [];
-      if (!mappingsCalled.includes(instance)) {
-        throw new Error(
-          `You must first call the elastic-mapping tool for the ${instance} instance to avoid guessing field names`
-        );
-      }
+      // TODO uncomment below code once Claude Desktop bug is fixed (see README for details)
+      // const mappingsCalled = (await sessionStore.get<string[]>(sessionId, 'elasticMappings')) ?? [];
+      // if (!mappingsCalled.includes(instance)) {
+      //   throw new Error(
+      //     `You must first call the elastic-mapping tool for the ${instance} instance to avoid guessing field names`
+      //   );
+      // }
 
       const [path, index, expectedSiteIdType] = instanceConfig[instance];
 

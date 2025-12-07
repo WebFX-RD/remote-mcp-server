@@ -150,6 +150,8 @@ Database:
 
 ### Session Management
 
+**NOTE:** As of 2025-12-07, Claude Desktop doesn't properly implement the [2025-06-18 session management protocol](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#session-management). Here's a **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/c7858ea6c6b0414748cc4eb89fc26eea.mp4)** explanation. Therefore, I code that utilizes sessions has been commented out for now.
+
 We implement [MCP session management](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#session-management) with Redis-backed state:
 
 1. On `initialize` request, generate a UUID session ID and store it in Redis: `mcp:sessions:{sessionId}` → `email`
