@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { elasticsearch } from '@webfx-rd/cloud-utils/elasticsearch';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
+import * as sessionStore from '../session-store.js';
 import { parseQueryForSiteId } from './_shared.js';
 import { SITE_DETAILS_TOOL_NAME } from './site.js';
 
@@ -44,7 +45,7 @@ export function register(server: McpServer) {
     {
       description: `\
 Execute an Elasticsearch query
-IMPORTANT: Do not guess field names (use the elastic-mapping tool first)`,
+Note: the elastic-mapping tool must be called for the instance before this tool`,
       inputSchema: {
         instance: z.enum(instances).describe(instanceDescription),
         action: z
@@ -60,7 +61,18 @@ IMPORTANT: Do not guess field names (use the elastic-mapping tool first)`,
         warning: z.optional(z.string()),
       },
     },
-    async ({ instance, action, query, body }) => {
+    async ({ instance, action, query, body }, { sessionId }) => {
+      if (!sessionId) {
+        throw new Error('Session ID is required');
+      }
+
+      const mappingsCalled = (await sessionStore.get<string[]>(sessionId, 'elasticMappings')) ?? [];
+      if (!mappingsCalled.includes(instance)) {
+        throw new Error(
+          `You must first call the elastic-mapping tool for the ${instance} instance to avoid guessing field names`
+        );
+      }
+
       const [path, index, expectedSiteIdType] = instanceConfig[instance];
 
       let warning: string | undefined;
@@ -110,7 +122,11 @@ IMPORTANT: Do not guess field names (use the elastic-mapping tool first)`,
         mapping: z.any(),
       },
     },
-    async ({ instance }) => {
+    async ({ instance }, { sessionId }) => {
+      if (!sessionId) {
+        throw new Error('Session ID is required');
+      }
+
       const [path, index] = instanceConfig[instance];
 
       const client = await elasticsearch.getClient({ path });
@@ -118,6 +134,11 @@ IMPORTANT: Do not guess field names (use the elastic-mapping tool first)`,
         method: 'GET',
         path: `${index}/_mapping`,
       });
+
+      const mappingsCalled = (await sessionStore.get<string[]>(sessionId, 'elasticMappings')) ?? [];
+      if (!mappingsCalled.includes(instance)) {
+        await sessionStore.set(sessionId, 'elasticMappings', [...mappingsCalled, instance]);
+      }
 
       return {
         structuredContent: { mapping },

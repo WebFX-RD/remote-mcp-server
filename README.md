@@ -148,6 +148,41 @@ Database:
 | [oauthClients](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/oauthClients/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522)         | DCR registered clients (deprecated)                  |
 | [oauthClientUsers](https://console.cloud.google.com/spanner/instances/devops/databases/mcp/tables/oauthClientUsers/details?inv=1&invt=Abp6IQ&project=idyllic-vehicle-159522) | Authenticated users via DCR (deprecated)             |
 
+### Session Management
+
+We implement [MCP session management](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#session-management) with Redis-backed state:
+
+1. On `initialize` request, generate a UUID session ID and store it in Redis: `mcp:sessions:{sessionId}` → `email`
+2. On subsequent requests, validate that the session ID (which MUST be passed by the client) exists and belongs to the same user (identified by email)
+3. Session state is stored per-key in Redis: `mcp:{sessionId}:{key}` → value
+4. All session data has a 24-hour TTL
+
+<details>
+<summary>Deviation from SDK approach</summary>
+
+The [typescript-sdk](https://github.com/modelcontextprotocol/typescript-sdk) keeps one transport instance alive per session and validates session IDs by comparing against an in-memory property. There are a few issues with this approach:
+
+1. It requires sticky sessions for horizontal scaling which adds complexity.
+2. It requires storing objects in an in-memory cache. We must then implement a cache eviction policy to avoid a memory leak. Also, Cloud Run may scale down an instance at any point so this could lead to weird errors.
+
+Our approach creates a new transport per request and validates sessions via Redis lookup. This is simpler conceptually (functional-style, stateless handlers) and avoids the issues mentioned above. We subclass `StreamableHTTPServerTransport` to bypass the SDK's built-in session validation, which would otherwise reject requests since each transport instance has a different in-memory session ID.
+
+</details>
+
+<details>
+<summary>Security</summary>
+
+Sessions are bound to the authenticated user's email. Even if an attacker guesses a valid UUID, the session will be rejected unless it was created for their email address. This prevents session hijacking.
+
+</details>
+
+<details>
+<summary>Correctness</summary>
+
+Redis is ephemeral and session data has a TTL, so we cannot guarantee perfect state tracking across server restarts or long-lived sessions. Tools should handle missing session state gracefully rather than failing hard. For example, if a tool requires prior state (like `elastic-execute` requiring `elastic-mapping` to be called first), it should return a clear error message guiding the user to retry the prerequisite step.
+
+</details>
+
 ## Deployment
 
 Run the [deploy.sh](./deploy.sh) script to deploy the Cloud Run Service.
