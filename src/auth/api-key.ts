@@ -12,14 +12,28 @@ axiosRetry(client);
 axiosEnhanceError(client);
 
 export async function verifyApiKey(apiKey: string): Promise<ApiKeyUserResponse> {
-  const res = await client.post('iam/authentication', {
+  const { data } = await client.post('iam/authentication', {
     strategy: 'apikey',
     apikey: apiKey,
   });
+
+  let email: string | undefined;
+  if (Array.isArray(data.user?.emails)) {
+    for (const item of data.user.emails) {
+      if (typeof item?.email === 'string' && item.email.endsWith('@webfx.com')) {
+        email = item.email;
+        break;
+      }
+    }
+  }
+  if (!email) {
+    throw new Error('Failed to find email for user');
+  }
+
   return {
-    email: res.data.user.email,
-    firstName: res.data.user.firstName,
-    lastName: res.data.user.lastName,
-    type: res.data.user.type,
+    email,
+    firstName: data.user.firstName,
+    lastName: data.user.lastName,
+    type: data.user.type,
   };
 }
