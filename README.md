@@ -91,15 +91,19 @@ This sections contains one-time setup instructions which were already completed 
 
 ## Development
 
+This section is useful for developers who want to modify the code.
+
 ### Code Structure
 
 - [src/index.ts](src/index.ts) - Entrypoint that starts the server
 - [src/auth/](src/auth/) - Authentication module
 - [src/mcp-server.ts](src/mcp-server.ts) - Registers MCP tools
+- [src/session-store.ts](src/session-store.ts) - Redis-backed session storage
 - [src/tools/](src/tools/) - MCP tool definitions
+- [src/transport.ts](src/transport.ts) - Custom transport with pre-defined session ID
 - [deploy.sh](./deploy.sh) - Deploys the server to Cloud Run
 
-### Authentication Strategies
+### Authentication
 
 We support two authentication strategies:
 
@@ -184,6 +188,10 @@ Sessions are bound to the authenticated user's email. Even if an attacker guesse
 Redis is ephemeral and session data has a TTL, so we cannot guarantee perfect state tracking across server restarts or long-lived sessions. Tools should handle missing session state gracefully rather than failing hard. For example, if a tool requires prior state (like `elastic-execute` requiring `elastic-mapping` to be called first), it should return a clear error message guiding the user to retry the prerequisite step.
 
 </details>
+
+### Useful Links
+
+- [Building Custom Connectors via Remote MCP Servers](https://support.claude.com/en/articles/11503834-building-custom-connectors-via-remote-mcp-servers) (official Anthropic support article)
 
 ## Deployment
 
