@@ -5,6 +5,7 @@ import * as mongo from './tools/mongo.js';
 import * as spanner from './tools/spanner.js';
 import * as elastic from './tools/elastic.js';
 import * as site from './tools/site.js';
+import * as opsgenie from './tools/opsgenie.js';
 
 export function getMcpServer() {
   const server = new McpServer({ name: 'rcfx-mcp', version: '1.0.0' });
@@ -14,5 +15,6 @@ export function getMcpServer() {
   spanner.register(server);
   elastic.register(server);
   site.register(server);
+  opsgenie.register(server);
   return server;
 }
