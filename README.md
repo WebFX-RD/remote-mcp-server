@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository has been moved to https://github.com/WebFX-RD/micro-services/tree/master/domains/devops/remote-mcp-server
+
 # mcp-server-remote
 
 This service runs the RCFX Remote MCP Server. Watch this **[2 minute video](https://bucket-mcfx-internal-979839513730.us-central1.run.app/clipboard/7776df6a5a309c4e7e35901defad561b.mp4)** for an overview.
